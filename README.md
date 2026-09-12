@@ -22,6 +22,13 @@ The interface also accepts `.ndax`, but that proprietary binary format requires 
 
 CSV and Excel processing occurs locally in the browser. These files are not uploaded by this repository. The optional `.ndax` workflow sends the selected file only to a local `/api/ndax` endpoint when that separately supplied parser is running.
 
+## Author
+
+**Kuo-Feng King**  
+University of Houston  
+Yan Yao & Lihong Zhao Laboratories  
+Email: [josh622443@gmail.com](mailto:josh622443@gmail.com) · [kking20@cougarnet.uh.edu](mailto:kking20@cougarnet.uh.edu)
+
 ## Citation
 
 If you use this software in research, a presentation, or a publication, please cite this repository using GitHub's **Cite this repository** button. A related manuscript is in preparation; citation information will be updated after publication. See [CITATION.md](CITATION.md).
