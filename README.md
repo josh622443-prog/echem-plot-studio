@@ -29,7 +29,6 @@ If you use this software in research, a presentation, or a publication, please c
 ## Known limitations
 
 - The `.ndax` local parser/server is not included.
-- The current embedded changelog stops at v1.24.3 even though the application version is v1.24.6.
 - Automated tests and sample datasets are not yet included.
 - Browser compatibility has not yet been documented systematically.
 
