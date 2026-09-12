@@ -4,7 +4,7 @@ Browser-based electrochemical data visualization and analysis tool for CSV and E
 
 ## Current release
 
-Version **1.24.6** (2026-09-12)
+Version **1.24.7** (2026-09-12)
 
 ## Run the tool
 
@@ -41,4 +41,8 @@ If you use this software in research, a presentation, or a publication, please c
 
 ## License
 
-MIT License. Copyright (c) 2026 Kuo-Feng King.
+Licensed under the **PolyForm Noncommercial License 1.0.0**.
+
+Noncommercial academic, educational, research, and personal use is permitted under the license terms. Commercial use requires prior written permission from Kuo-Feng King. Contact [kking20@cougarnet.uh.edu](mailto:kking20@cougarnet.uh.edu) for commercial licensing or other permissions.
+
+Copyright (c) 2026 Kuo-Feng King. See [LICENSE](LICENSE) for the complete terms.
