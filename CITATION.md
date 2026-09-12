@@ -6,4 +6,4 @@ A related manuscript is currently in preparation. This file and `CITATION.cff` w
 
 Suggested acknowledgement:
 
-> Electrochemical data analysis and visualization were performed using Echem Plot Studio (Kuo-Feng King, version 1.24.6).
+> Electrochemical data analysis and visualization were performed using Echem Plot Studio (Kuo-Feng King, version 1.24.7).
