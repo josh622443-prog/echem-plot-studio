@@ -16,7 +16,9 @@ Supported directly in the browser:
 - `.xlsx`
 - `.xls`
 
-The interface also accepts `.ndax`, but that proprietary binary format requires a separate local parsing server and BTSDA dependency that are **not included in this release**. Consequently, `.ndax` import does not work from a static GitHub Pages deployment. Convert the data to Excel/CSV first unless you have the local parser package.
+For `.ndax` import on Windows, download the whole repository and double-click **`Start Echem Plot Studio.cmd`**. Keep its command window open and use the page it opens at `http://127.0.0.1:8765/`. The included local server and C# reader source use your installed NEWARE BTSDA libraries; vendor DLLs are not distributed. Python 3.7+ and .NET Framework 4.x are required. See `README-FIRST.txt`.
+
+Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.24.15 interface is used by both entry methods.
 
 ## v1.24.15 changes and validation
 
@@ -28,7 +30,7 @@ The interface also accepts `.ndax`, but that proprietary binary format requires 
 
 ## Data privacy
 
-CSV and Excel processing occurs locally in the browser. These files are not uploaded by this repository. The optional `.ndax` workflow sends the selected file only to a local `/api/ndax` endpoint when that separately supplied parser is running.
+CSV and Excel processing occurs locally in the browser. These files are not uploaded by this repository. The optional `.ndax` workflow sends the selected file only to the local `/api/ndax` endpoint when the included parser is running.
 
 ## Author
 
@@ -43,7 +45,9 @@ If you use this software in research, a presentation, or a publication, please c
 
 ## Known limitations
 
-- The `.ndax` local parser/server is not included.
+- `.ndax` needs the local launcher and a separately installed NEWARE BTSDA; it cannot run on static GitHub Pages.
+- On this computer, Windows Application Control blocked the compiled reader with error 4551 during the 2026-10-29 integration check. Compilation and HTTP integration were checked, but real NDAX parsing remains unverified and blocked until the executable or source is approved by the system administrator. CSV/Excel import remains available.
+- Run `python test_ndax_server.py` to test the local HTTP bridge with synthetic input and a mocked extractor; passing these tests does not verify NEWARE parsing.
 - Automated regression tests cover Custom Axes duration parsing, unit conversion, chart controls, and synthetic CSV upload. They do not constitute full application or DRT regression coverage.
 - Browser compatibility has not yet been documented systematically.
 

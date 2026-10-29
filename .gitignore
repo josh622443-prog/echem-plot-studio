@@ -1,4 +1,6 @@
 .DS_Store
 Thumbs.db
 *.log
-
+.runtime/
+__pycache__/
+node_modules/
