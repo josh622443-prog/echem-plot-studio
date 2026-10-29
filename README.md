@@ -16,9 +16,11 @@ Supported directly in the browser:
 - `.xlsx`
 - `.xls`
 
-For `.ndax` import on Windows, download the whole repository and double-click **`Start Echem Plot Studio.cmd`**. Keep its command window open and use the page it opens at `http://127.0.0.1:8765/`. The included local server and C# reader source use your installed NEWARE BTSDA libraries; vendor DLLs are not distributed. Python 3.7+ and .NET Framework 4.x are required. See `README-FIRST.txt`.
+For `.ndax` import on Windows, download the whole repository and double-click **`Start Echem Plot Studio.cmd`**. Keep its command window open and use the page it opens at `http://127.0.0.1:8765/`. The optional Python reader (`ndax_reader.py`) uses [NewareNDA](https://github.com/d-cogswell/NewareNDA); Python 3.9+ is required. First setup installs `requirements_ndax.txt` into `.runtime/python`. This reader does not use the legacy compiled executable or NEWARE vendor DLLs. See `README-FIRST.txt`.
 
 Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.24.15 interface is used by both entry methods.
+
+Python add-on validation (2026-10-29): six conversion tests and six HTTP bridge tests passed. A locally held NDAX file was also imported through the actual launcher in Edge, retaining all source records and rendering retention and GCD charts without browser errors. The research file is not distributed. Existing Custom Axes and CSV upload browser tests were rerun and passed.
 
 ## v1.24.15 changes and validation
 
@@ -45,9 +47,9 @@ If you use this software in research, a presentation, or a publication, please c
 
 ## Known limitations
 
-- `.ndax` needs the local launcher and a separately installed NEWARE BTSDA; it cannot run on static GitHub Pages.
-- On this computer, Windows Application Control blocked the compiled reader with error 4551 during the 2026-10-29 integration check. Compilation and HTTP integration were checked, but real NDAX parsing remains unverified and blocked until the executable or source is approved by the system administrator. CSV/Excel import remains available.
-- Run `python test_ndax_server.py` to test the local HTTP bridge with synthetic input and a mocked extractor; passing these tests does not verify NEWARE parsing.
+- `.ndax` needs the local Python launcher; it cannot run on static GitHub Pages. Large files retain all records and need sufficient browser memory.
+- The Python add-on is an independent reader. Elapsed time is reconstructed from step durations, and cycle capacities/energies sum active-direction per-step maxima. Consult the `ImportInfo` sheet and compare new instrument/file variants with NEWARE exports.
+- `python test_ndax_reader.py` checks units, active mass, step boundaries, partial cycles, missing ratios, and full row retention. `python test_ndax_server.py` checks HTTP integration with synthetic input. These do not establish accuracy for every NDAX format.
 - Automated regression tests cover Custom Axes duration parsing, unit conversion, chart controls, and synthetic CSV upload. They do not constitute full application or DRT regression coverage.
 - Browser compatibility has not yet been documented systematically.
 

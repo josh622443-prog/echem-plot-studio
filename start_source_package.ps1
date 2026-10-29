@@ -21,95 +21,43 @@ function Find-Python {
   if ($env:USERPROFILE) {
     $candidates += Join-Path $env:USERPROFILE '.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe'
   }
+  $fallbackPython = $null
   foreach ($path in ($candidates | Select-Object -Unique)) {
     if (-not (Test-Path -LiteralPath $path) -or $path -like '*\Microsoft\WindowsApps\*') { continue }
     try {
       $version = & $path -c 'import sys; print(sys.version_info[0] * 100 + sys.version_info[1])' 2>$null
-      if ([int]$version -ge 307) { return (Resolve-Path -LiteralPath $path).Path }
+      if ([int]$version -ge 309) {
+        if (-not $fallbackPython) { $fallbackPython = (Resolve-Path -LiteralPath $path).Path }
+        & $path (Join-Path $root 'ndax_reader.py') --check 1>$null 2>$null
+        if ($LASTEXITCODE -eq 0) { return (Resolve-Path -LiteralPath $path).Path }
+      }
     } catch { }
   }
-  throw 'Python 3.7 or newer was not found. Install Python 3 from python.org, then run this launcher again.'
-}
-
-function Test-Btsda([string]$path) {
-  if (-not $path) { return $false }
-  foreach ($library in @('BTSDALib.dll','Common.dll','CommonCtrl.dll','Newtonsoft.Json.dll')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $path $library))) { return $false }
-  }
-  return $true
-}
-
-function Find-Btsda {
-  $settingsDir = Join-Path $env:LOCALAPPDATA 'EchemPlotStudio'
-  $settingsFile = Join-Path $settingsDir 'btsda-directory.txt'
-  $candidates = @($env:NEWARE_BTSDA_DIR)
-  if (Test-Path -LiteralPath $settingsFile) { $candidates += (Get-Content -LiteralPath $settingsFile -Raw).Trim() }
-  if (${env:ProgramFiles(x86)}) { $candidates += Join-Path ${env:ProgramFiles(x86)} 'NEWARE\BTSClient80' }
-  if ($env:ProgramFiles) { $candidates += Join-Path $env:ProgramFiles 'NEWARE\BTSClient80' }
-  foreach ($drive in @('C','D','E')) {
-    $candidates += "${drive}:\NEWARE\BTSClient80"
-    $candidates += "${drive}:\Program Files\NEWARE\BTSClient80"
-    $candidates += "${drive}:\Program Files (x86)\NEWARE\BTSClient80"
-  }
-  foreach ($path in $candidates) { if (Test-Btsda $path) { return $path } }
-
-  Add-Type -AssemblyName System.Windows.Forms
-  [System.Windows.Forms.MessageBox]::Show('Select the NEWARE BTSClient/BTSDA folder containing BTSDALib.dll and Common.dll.','Locate BTSDA') | Out-Null
-  while ($true) {
-    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-    $dialog.Description = 'Select the NEWARE BTSClient/BTSDA folder'
-    $dialog.ShowNewFolderButton = $false
-    if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { throw 'BTSDA folder selection was cancelled.' }
-    if (Test-Btsda $dialog.SelectedPath) {
-      New-Item -ItemType Directory -Path $settingsDir -Force | Out-Null
-      Set-Content -LiteralPath $settingsFile -Value $dialog.SelectedPath -Encoding UTF8
-      return $dialog.SelectedPath
-    }
-    if ([System.Windows.Forms.MessageBox]::Show('That folder does not contain the required BTSDA libraries. Try again?','Invalid BTSDA folder','RetryCancel','Warning') -ne 'Retry') { throw 'A valid BTSDA folder was not selected.' }
-  }
-}
-
-function Find-Compiler {
-  $candidates = @(
-    (Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'),
-    (Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe')
-  )
-  foreach ($path in $candidates) { if (Test-Path -LiteralPath $path) { return $path } }
-  throw 'The Windows .NET Framework C# compiler was not found. Enable/install .NET Framework 4.x and try again.'
+  if ($fallbackPython) { return $fallbackPython }
+  throw 'Python 3.9 or newer was not found. Install Python 3 from python.org, then run this launcher again.'
 }
 
 Write-Stage 'Checking Python...'
 $python = Find-Python
 Write-Stage "Python: $python"
-Write-Stage 'Checking NEWARE BTSDA...'
-$btsda = Find-Btsda
-Write-Stage "BTSDA: $btsda"
-Write-Stage 'Checking the Windows .NET compiler...'
-$compiler = Find-Compiler
-Write-Stage "Compiler: $compiler"
-$runtimeDir = Join-Path $root '.runtime'
-$extractor = Join-Path $runtimeDir 'NdaxJsonExtractor.exe'
-New-Item -ItemType Directory -Path $runtimeDir -Force | Out-Null
-$source = Join-Path $root 'NdaxJsonExtractor.cs'
-
-if (-not (Test-Path $extractor) -or (Get-Item $source).LastWriteTimeUtc -gt (Get-Item $extractor).LastWriteTimeUtc) {
-  Write-Stage 'Building the local NDAX reader from source...'
-  $refs = @('Common.dll','CommonCtrl.dll','BTSDALib.dll','Newtonsoft.Json.dll') | ForEach-Object { '/r:' + (Join-Path $btsda $_) }
-  $args = @('/nologo','/optimize+','/target:exe',('/out:'+$extractor)) + $refs + @('/r:System.IO.Compression.dll','/r:System.IO.Compression.FileSystem.dll','/r:Microsoft.CSharp.dll',$source)
-  & $compiler $args
-  if ($LASTEXITCODE -ne 0 -or -not (Test-Path $extractor)) { throw 'The local NDAX reader could not be compiled.' }
+$reader = Join-Path $root 'ndax_reader.py'
+$runtimePackages = Join-Path $root '.runtime\\python'
+& $python $reader --check 2>$null
+if ($LASTEXITCODE -ne 0) {
+  Write-Stage 'Installing local NDAX dependencies (first start requires internet)...'
+  & $python -m pip install --target $runtimePackages --upgrade --disable-pip-version-check -r (Join-Path $root 'requirements_ndax.txt')
+  if ($LASTEXITCODE -ne 0) { throw 'NDAX dependency installation failed. Check the internet connection and Python installation.' }
+  & $python $reader --check
+  if ($LASTEXITCODE -ne 0) { throw 'NDAX dependencies could not be loaded.' }
 }
-
-$env:NEWARE_BTSDA_DIR = $btsda
-$env:ECHEM_EXTRACTOR = $extractor
 $url = "http://127.0.0.1:$Port/"
-if ($CheckOnly) { Write-Stage 'NDAX prerequisites and reader compilation passed.'; return }
+if ($CheckOnly) { Write-Stage 'Python NDAX reader is ready.'; return }
 $existing = $null
 try {
   $existing = Invoke-RestMethod ($url+'health') -TimeoutSec 1
 } catch { }
 if ($existing) {
-  if ($existing.service -ne 'ndax-api' -or $existing.version -ne '1.24.15' -or $existing.root -ne $root) {
+  if ($existing.reader -ne 'newarenda-python' -or $existing.service -ne 'ndax-api' -or $existing.version -ne '1.24.15' -or $existing.root -ne $root) {
     throw "Another application or older Echem server is using port $Port. Close its launcher, or run this script with a different -Port."
   }
   if (-not $NoBrowser) { Start-Process $url }

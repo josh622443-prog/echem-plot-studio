@@ -33,7 +33,7 @@ class BridgeTests(unittest.TestCase):
             self.assertEqual(response.read(), api.HTML.read_bytes())
 
     def test_health_identifies_release_and_package(self):
-        with patch.object(api, 'EXTRACTOR', Path(__file__)):
+        with patch.object(api, 'check_dependencies', return_value={'reader': 'newarenda-python'}):
             with urlopen(self.url + '/health') as response:
                 status = json.load(response)
         self.assertTrue(status['ok'])
@@ -43,9 +43,10 @@ class BridgeTests(unittest.TestCase):
     def test_upload_returns_extractor_workbook(self):
         workbook = {'sheetNames': ['Record'], 'sheets': {'Record': {'headers': ['Voltage'], 'rows': [{'Voltage': 3.5}]}}}
         def extract(args, **kwargs):
-            self.assertEqual(Path(args[1]).read_bytes(), b'synthetic input')
-            self.assertEqual(kwargs['env']['NDAX_MASS_G'], '0.1')
-            Path(args[2]).write_text(json.dumps(workbook), encoding='utf-8')
+            self.assertEqual(Path(args[2]).read_bytes(), b'synthetic input')
+            self.assertEqual(args[4:], ['--mass-g', '0.1'])
+            self.assertTrue(args[1].endswith('ndax_reader.py'))
+            Path(args[3]).write_text(json.dumps(workbook), encoding='utf-8')
             return subprocess.CompletedProcess(args, 0, '', '')
         with patch.object(api.subprocess, 'run', side_effect=extract):
             with urlopen(self.post()) as response:
@@ -59,14 +60,12 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, 422)
         self.assertIn('Invalid NDAX fixture', json.load(caught.exception)['error'])
 
-    def test_application_control_reports_required_action(self):
-        error = OSError('Application Control blocked the executable')
-        error.winerror = 4551
-        with patch.object(api.subprocess, 'run', side_effect=error):
+    def test_invalid_mass_rejected_before_parsing(self):
+        for mass in ['nan', 'inf', '0', '-1']:
+            request = Request(self.url + '/api/ndax?mass_g=' + mass, data=b'fixture', headers={'X-Filename': 'fixture.ndax'})
             with self.assertRaises(HTTPError) as caught:
-                urlopen(self.post())
-        self.assertEqual(caught.exception.code, 503)
-        self.assertIn('IT administrator', json.load(caught.exception)['error'])
+                urlopen(request)
+            self.assertEqual(caught.exception.code, 400)
 
     def test_non_ndax_rejected(self):
         with self.assertRaises(HTTPError) as caught:

@@ -1,46 +1,46 @@
-ECHEM PLOT STUDIO — SOURCE-BASED FOLDER PACKAGE
+ECHEM PLOT STUDIO v1.24.15 - PYTHON NDAX ADD-ON
 ================================================
 
-Purpose
--------
-This package avoids distributing the standalone EchemPlotStudio.exe.
-The NDAX reader is compiled locally from the included C# source when the
-application is first started.
+Start
+-----
+Double-click "Start Echem Plot Studio.cmd" and use the page it opens at
+http://127.0.0.1:8765/. Keep the launcher window open while using NDAX.
+Opening the HTML directly still supports CSV/Excel, but not the NDAX API.
 
 Requirements
 ------------
-1. Windows 10 or Windows 11
-2. NEWARE BTSClient80 / BTSDA installed
-3. Python 3.7 or newer (64-bit recommended)
-4. Microsoft .NET Framework 4.x
+Python 3.9 or newer. The launcher looks for an installed Python and installs
+requirements_ndax.txt into this folder's .runtime/python on first use.
+First setup needs internet and a writable package folder. Parsing is local.
+No NEWARE BTSDA installation, .NET compiler, or custom EXE is required by
+the Python reader. The older C# reader source is retained for reference.
 
-How to start
-------------
-1. Copy this entire folder to any location.
-2. Double-click "Start Echem Plot Studio.cmd".
-3. If BTSDA is not detected, select its installation folder. The selected
-   folder must contain BTSDALib.dll, Common.dll, CommonCtrl.dll, and Newtonsoft.Json.dll.
-4. Your default browser opens to http://127.0.0.1:8765/.
-5. Keep the command window open while using the application.
-6. Close the command window when finished.
+Standalone reader
+-----------------
+python ndax_reader.py input.ndax output.json --mass-g 0.04563
+python ndax_reader.py --check
 
-If double-click is blocked
---------------------------
-Open PowerShell in this folder and run:
+Install manually if needed:
+python -m pip install --target .runtime/python -r requirements_ndax.txt
 
-  powershell -ExecutionPolicy Bypass -File .\start_source_package.ps1
+Data and calculations
+---------------------
+NewareNDA is an independent parser, not the official NEWARE reader.
+All input records are retained; no automatic downsampling is performed.
+Large files can take time and memory to import. The ImportInfo sheet records
+the mass, row count, time basis, and cycle-statistics assumptions.
+Elapsed time sums step-relative time, excluding unrecorded wall-clock pauses.
+Cycle statistics sum each step's active-direction capacity/energy maxima.
+Check numerical units and cycle totals against a NEWARE export before using
+a new instrument/file variant for quantitative conclusions.
+Changing active mass requires importing the NDAX file again.
 
-Security note
--------------
-No prebuilt custom EXE is included in this folder. On first launch, Windows'
-own .NET compiler builds NdaxJsonExtractor.exe from NdaxJsonExtractor.cs and
-stores it under:
+Tests
+-----
+python test_ndax_reader.py
+python test_ndax_server.py
+npm test
 
-  .runtime (inside this package folder)
-
-This launcher serves Echem_Plot_Studio_v1.24.15.html. Do not open the HTML
-directly when importing NDAX files. Vendor DLLs and research data are not bundled.
-The package folder must be writable for the first local compilation.
-
-Some institutional security policies may also block locally compiled programs.
-In that case, your IT administrator must approve the application or its source.
+No research data, vendor DLLs, or compiled executables are published.
+The NewareNDA dependency and its license remain under .runtime/python;
+see THIRD-PARTY-NOTICES.md. The project's original LICENSE is unchanged.

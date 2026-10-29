@@ -3,11 +3,12 @@
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
-import json, os, subprocess, tempfile
+import json, math, os, subprocess, sys, tempfile
+from ndax_reader import check_dependencies
 
 ROOT = Path(__file__).resolve().parent
 HTML = ROOT / "Echem_Plot_Studio_v1.24.15.html"
-EXTRACTOR = Path(os.environ.get("ECHEM_EXTRACTOR", str(ROOT / ".runtime" / "NdaxJsonExtractor.exe"))).resolve()
+READER = ROOT / 'ndax_reader.py'
 MAX_UPLOAD = 2 * 1024 * 1024 * 1024
 
 class Handler(BaseHTTPRequestHandler):
@@ -27,8 +28,13 @@ class Handler(BaseHTTPRequestHandler):
         if path in ("/", "/index.html"):
             return self._send(200, HTML.read_bytes(), "text/html; charset=utf-8")
         if path in ("/health", "/api/status"):
-            ok = HTML.exists() and EXTRACTOR.exists()
-            return self._send(200 if ok else 503, json.dumps({"ok": ok, "service": "ndax-api", "version": "1.24.15", "root": str(ROOT), "extractor": EXTRACTOR.exists()}))
+            try:
+                dependencies = check_dependencies()
+                ok = HTML.exists() and READER.exists()
+                error = None
+            except ImportError as exc:
+                dependencies, ok, error = {}, False, str(exc)
+            return self._send(200 if ok else 503, json.dumps({"ok": ok, "service": "ndax-api", "version": "1.24.15", "root": str(ROOT), "reader": "newarenda-python", "dependencies": dependencies, "error": error}))
         self._send(404, json.dumps({"error": "Not found"}))
 
     def do_POST(self):
@@ -44,7 +50,8 @@ class Handler(BaseHTTPRequestHandler):
             if not original.lower().endswith(".ndax"):
                 return self._send(415, json.dumps({"error": "Expected an .ndax file"}))
             mass = parse_qs(parsed.query).get("mass_g", ["0.04563"])[0]
-            if float(mass) <= 0: raise ValueError("mass_g must be positive")
+            if not math.isfinite(float(mass)) or float(mass) <= 0:
+                raise ValueError("mass_g must be finite and positive")
             with tempfile.TemporaryDirectory(prefix="echem-ndax-") as td:
                 src, out = Path(td) / original, Path(td) / "result.json"
                 with src.open("wb") as f:
@@ -53,17 +60,16 @@ class Handler(BaseHTTPRequestHandler):
                         chunk = self.rfile.read(min(1024 * 1024, remaining))
                         if not chunk: raise IOError("Upload ended early")
                         f.write(chunk); remaining -= len(chunk)
-                env = os.environ.copy(); env["NDAX_MASS_G"] = mass
-                run = subprocess.run([str(EXTRACTOR), str(src), str(out)], cwd=str(ROOT), env=env,
-                                     capture_output=True, text=True, timeout=1800)
+                env = os.environ.copy(); env['PYTHONUTF8'] = '1'
+                run = subprocess.run([sys.executable, str(READER), str(src), str(out), '--mass-g', mass],
+                                     cwd=str(ROOT), env=env, capture_output=True,
+                                     text=True, encoding='utf-8', errors='replace', timeout=1800)
                 if run.returncode or not out.exists():
-                    msg = (run.stderr or run.stdout or "BTSDA extraction failed").strip()
+                    msg = (run.stderr or run.stdout or "Python NDAX parsing failed").strip()
                     return self._send(422, json.dumps({"error": msg[-4000:]}))
                 return self._send(200, out.read_bytes())
-        except OSError as exc:
-            if getattr(exc, "winerror", None) == 4551:
-                return self._send(503, json.dumps({"error": "Windows Application Control blocked the local NDAX reader (error 4551). Ask your IT administrator to approve NdaxJsonExtractor.exe or its source. Until then, export CSV/Excel from NEWARE and import that file instead."}))
-            self._send(500, json.dumps({"error": str(exc)}))
+        except ValueError as exc:
+            self._send(400, json.dumps({"error": str(exc)}))
         except Exception as exc:
             self._send(500, json.dumps({"error": str(exc)}))
 

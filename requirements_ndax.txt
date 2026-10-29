@@ -1,0 +1,3 @@
+NewareNDA==2026.6.11
+pandas>=1.5,<4
+xmltodict==1.0.4

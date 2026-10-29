@@ -1039,7 +1039,7 @@
       <section class="instr-section">
         <h3 data-i18n="instr_s2_title">2. 匯入 NEWARE .ndax 檔案</h3>
         <ul>
-          <li data-i18n="instr_s2_p1">.ndax 是 NEWARE 的專屬二進位格式，瀏覽器沒辦法直接讀，需要搭配另外提供的資料夾（本機小型伺服器 + BTSDA）一起使用，用「Start Echem Plot Studio.cmd」開啟頁面才有效。</li>
+          <li data-i18n="instr_s2_p1">.ndax 需要同資料夾的 Python 讀取器與本機伺服器。請用「Start Echem Plot Studio.cmd」開啟頁面；此讀取器不需要 BTSDA。檔案只在本機解析。</li>
           <li data-i18n="instr_s2_p2">上方「活性物質質量」欄位會影響 .ndax 匯入時算出來的比容量，記得改成你電池的實際質量再上傳。</li>
           <li data-i18n="instr_s2_p3">CSV / Excel 檔案不受影響，不需要本機伺服器，跟平常一樣拖曳上傳就能用。</li>
         </ul>
@@ -2105,7 +2105,7 @@ const TRANSLATIONS = {
     instr_s1_p2: "上傳後，每個分頁上方會自動列出偵測到的工作表與欄位，四張圖也會自動重新繪製。",
     instr_s1_p3: "如果檔案裡有多個工作表，各分頁可以分別選用不同的工作表（例如充放電曲線用逐點明細表，其他分頁用每圈一列的統計表）。",
     instr_s2_title: "2. 匯入 NEWARE .ndax 檔案",
-    instr_s2_p1: "「.ndax 是 NEWARE 的專屬二進位格式，瀏覽器沒辦法直接讀，需要搭配另外提供的資料夾（本機小型伺服器 + BTSDA）一起使用，用「Start Echem Plot Studio.cmd」開啟頁面才有效。",
+    instr_s2_p1: ".ndax 需要同資料夾的 Python 讀取器與本機伺服器。請用「Start Echem Plot Studio.cmd」開啟頁面；此讀取器不需要 BTSDA。檔案只在本機解析。",
     instr_s2_p2: "上方「活性物質質量」欄位會影響 .ndax 匯入時算出來的比容量，記得改成你電池的實際質量再上傳。",
     instr_s2_p3: "CSV / Excel 檔案不受影響，不需要本機伺服器，跟平常一樣拖曳上傳就能用。",
     instr_s3_title: "3. 確認欄位對應",
@@ -2472,7 +2472,7 @@ const TRANSLATIONS = {
     instr_s1_p2: "上传后，每个分页上方会自动列出检测到的工作表与字段，四张图也会自动重新绘制。",
     instr_s1_p3: "如果文件里有多个工作表，各分页可以分别选用不同的工作表（例如充放电曲线用逐点明细表，其他分页用每圈一行的统计表）。",
     instr_s2_title: "2. 导入 NEWARE .ndax 文件",
-    instr_s2_p1: ".ndax 是 NEWARE 的专属二进制格式，浏览器没办法直接读，需要搭配另外提供的文件夹（本地小型服务器 + BTSDA）一起使用，用「Start Echem Plot Studio.cmd」打开页面才有效。",
+    instr_s2_p1: ".ndax 需要同文件夹的 Python 读取器与本地服务器。请用「Start Echem Plot Studio.cmd」打开页面；此读取器不需要 BTSDA。文件只在本地解析。",
     instr_s2_p2: "上方「活性物质质量」字段会影响 .ndax 导入时算出来的比容量，记得改成你电池的实际质量再上传。",
     instr_s2_p3: "CSV / Excel 文件不受影响，不需要本地服务器，跟平常一样拖入上传就能用。",
     instr_s3_title: "3. 确认字段对应",
@@ -2839,7 +2839,7 @@ const TRANSLATIONS = {
     instr_s1_p2: "After uploading, each tab shows the detected sheets and columns, and all four charts redraw automatically.",
     instr_s1_p3: "If the file has multiple sheets, each tab can use a different one (e.g. a point-by-point detail sheet for the GCD curve, and a one-row-per-cycle summary sheet for the other tabs).",
     instr_s2_title: "2. Importing NEWARE .ndax files",
-    instr_s2_p1: ".ndax is NEWARE's proprietary binary format, which browsers can't read directly. It requires the accompanying folder (a small local server + BTSDA) — open this page via \"Start Echem Plot Studio.cmd\" for it to work.",
+    instr_s2_p1: ".ndax requires the accompanying Python reader and local server. Open this page via \"Start Echem Plot Studio.cmd\". This reader does not require BTSDA; files are parsed locally.",
     instr_s2_p2: "The \"Active material mass\" field above affects the specific capacity computed from .ndax imports — set it to your cell's actual mass before uploading.",
     instr_s2_p3: "CSV/Excel files are unaffected and don't need the local server — drag and drop them as usual.",
     instr_s3_title: "3. Check the column mapping",
@@ -3437,7 +3437,7 @@ async function handleFiles(file){
   setLoading(true, t("dropzone_loading"));
   if(name.endsWith(".ndax")){
     // .ndax 是 NEWARE 的專屬二進位格式，瀏覽器沒辦法直接解析，
-    // 交給本機跑的小型 API 伺服器（透過官方 BTSDA 函式庫解析），詳見 README-FIRST.txt
+    // 交給本機 Python NDAX 讀取器；詳見 README-FIRST.txt。
     try{
       const massInput = document.getElementById("ndaxMassG");
       const mass = (massInput && massInput.value) || "0.04563";
