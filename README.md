@@ -4,11 +4,11 @@ Browser-based electrochemical data visualization and analysis tool for CSV and E
 
 ## Current release
 
-Version **1.24.15** (2026-10-08)
+Version **1.24.16** (2026-10-29)
 
 ## Run the tool
 
-Download `index.html` or `Echem_Plot_Studio_v1.24.15.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
+Download `index.html` or `Echem_Plot_Studio_v1.24.16.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
 
 Supported directly in the browser:
 
@@ -18,9 +18,17 @@ Supported directly in the browser:
 
 For `.ndax` import on Windows, download the whole repository and double-click **`Start Echem Plot Studio.cmd`**. Keep its command window open and use the page it opens at `http://127.0.0.1:8765/`. The optional Python reader (`ndax_reader.py`) uses [NewareNDA](https://github.com/d-cogswell/NewareNDA); Python 3.9+ is required. First setup installs `requirements_ndax.txt` into `.runtime/python`. This reader does not use the legacy compiled executable or NEWARE vendor DLLs. See `README-FIRST.txt`.
 
-Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.24.15 interface is used by both entry methods.
+Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.24.16 interface is used by both entry methods.
 
 Python add-on validation (2026-10-29): six conversion tests and six HTTP bridge tests passed. A locally held NDAX file was also imported through the actual launcher in Edge, retaining all source records and rendering retention and GCD charts without browser errors. The research file is not distributed. Existing Custom Axes and CSV upload browser tests were rerun and passed.
+
+## v1.24.16 palette fix
+
+Applying a palette updates only checked series and defers chart rendering until all colors have changed. Each affected chart redraws once, avoiding repeated full-data processing and accidental selection of unchecked cycles. Individual swatches remain editable.
+
+`npm test` now includes `palette-test.cjs`, which exercises a 20-cycle synthetic dataset, verifies selection preservation and a single redraw, and checks individual color changes and browser responsiveness.
+
+Validation on 2026-10-29: all three package browser tests and the local API tests passed. A full local NDAX import was also tested on the dQ/dV tab: palette application preserved the selected cycles and caused exactly one redraw. The input data is not distributed.
 
 ## v1.24.15 changes and validation
 

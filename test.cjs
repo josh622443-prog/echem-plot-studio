@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.BROWSER_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
  const results=[];
- for(const file of ['baseline_v1.24.14.html','Echem_Plot_Studio_v1.24.15.html']){
+ for(const file of ['baseline_v1.24.14.html','Echem_Plot_Studio_v'+require('./package.json').version+'.html']){
   const page=await browser.newPage(); const errors=[]; page.on('pageerror',e=>errors.push(e.message));
   await page.goto('file:///'+path.resolve(file).replace(/\\/g,'/')); await page.waitForTimeout(1500);
   const r=await page.evaluate(()=>{
@@ -16,7 +16,7 @@ const {chromium}=require('playwright');
    return {values:mcGetAxisValues(b,'x').values, circles:document.querySelectorAll('#chart-multicell circle').length, svg:document.getElementById('chart-multicell').innerHTML,diagnostics:document.getElementById('mcCustomDiagnostics')?.textContent};
   });
   results.push({file,values:r.values,circles:r.circles,diagnostics:r.diagnostics,errors});
-  if(file.includes('1.24.15')){
+  if(!file.startsWith('baseline_')){
    if(JSON.stringify(r.values)!=='[0,0.5,1]'||r.circles<3)throw Error('Duration render failed');
    fs.writeFileSync('Custom_Axes_verified.svg',r.svg);
    const more=await page.evaluate(()=>{

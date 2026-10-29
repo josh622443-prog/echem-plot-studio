@@ -57,7 +57,7 @@ try {
   $existing = Invoke-RestMethod ($url+'health') -TimeoutSec 1
 } catch { }
 if ($existing) {
-  if ($existing.reader -ne 'newarenda-python' -or $existing.service -ne 'ndax-api' -or $existing.version -ne '1.24.15' -or $existing.root -ne $root) {
+  if ($existing.reader -ne 'newarenda-python' -or $existing.service -ne 'ndax-api' -or $existing.version -ne '1.24.16' -or $existing.root -ne $root) {
     throw "Another application or older Echem server is using port $Port. Close its launcher, or run this script with a different -Port."
   }
   if (-not $NoBrowser) { Start-Process $url }

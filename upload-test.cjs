@@ -3,7 +3,7 @@ const {chromium}=require('playwright');
 (async()=>{
 const browser=await chromium.launch({executablePath:process.env.BROWSER_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true});
 const page=await browser.newPage({viewport:{width:1500,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
-await page.goto('file:///'+path.resolve('Echem_Plot_Studio_v1.24.15.html').replace(/\\/g,'/'));
+await page.goto('file:///'+path.resolve('Echem_Plot_Studio_v'+require('./package.json').version+'.html').replace(/\\/g,'/'));
 await page.locator('#tabMenuTrigger').click();await page.locator('.tabbtn[data-tab="multicell"]').click();await page.locator('[data-mcmode="custom"]').click();
 await page.locator('#controls-multicell [data-role="x-metric"]').selectOption('time');
 await page.locator('#controls-multicell [data-role="x-unit"]').selectOption('h');

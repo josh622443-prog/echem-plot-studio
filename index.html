@@ -2997,8 +2997,9 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.24.15";
+const APP_VERSION = "1.24.16";
 const CHANGELOG = [
+  {version:"1.24.16",date:"2026-10-29",items:["Fixed palette application freezing large charts: update selected series together and redraw once.","Preserve unchecked cycles and individual series color editing."]},
   {version:"1.24.15",date:"2026-10-08",items:["Fixed Custom Axes elapsed duration parsing (HH:MM:SS and day durations), with valid-pair diagnostics.","Fixed load/sheet mapping UI refresh and explicit unmapped column selection."]},
   {version:"1.24.14",date:"2026-09-14",items:["Unified scientific palette color picker across all main Studio and embedded DRT series/line color controls.","Added preset swatches, Custom color, and one-click Apply palette to all DRT series while preserving per-series editing.","All dynamically created color inputs are automatically enhanced so future legend/line color controls use the same UI."]},
   {version:"1.24.13",date:"2026-09-14",items:["Added frequency/τ coverage panel to DRT batch analysis.","Added Full / Partial / Outside-range status for P1–P4 windows.","Added P1–P4 shaded bands to the DRT overlay and clarified direct τ versus extended fitting τ coverage."]},
@@ -4202,7 +4203,22 @@ document.getElementById("downloadAutoCombined").addEventListener("click", ()=>{
   }catch(err){ alert("Combined Excel export failed: "+(err?.message||err)); }
 });
 
+let chartRenderBatchDepth = 0;
+const pendingChartRenders = new Set();
+function withChartRenderBatch(update){
+  chartRenderBatchDepth++;
+  try { return update(); }
+  finally {
+    chartRenderBatchDepth--;
+    if(chartRenderBatchDepth===0){
+      const tabs=[...pendingChartRenders];
+      pendingChartRenders.clear();
+      tabs.forEach(renderTab);
+    }
+  }
+}
 function renderTab(tab){
+  if(chartRenderBatchDepth>0){pendingChartRenders.add(tab);return;}
   if(tab==="gcd") return renderGCD();
   if(tab==="dqdv") return renderDqDv();
   if(tab==="cyclelife") return renderCycleLife();
@@ -6392,10 +6408,12 @@ applyLanguage("en");
   function close(){const p=document.getElementById('sciPalettePopover'); if(p)p.classList.remove('open'); activeInput=null;}
 
   function setInputColor(input,color){
-    input.value=color;
-    input.dispatchEvent(new Event('input',{bubbles:true}));
-    input.dispatchEvent(new Event('change',{bubbles:true}));
-    syncTrigger(input);
+    withChartRenderBatch(()=>{
+      input.value=color;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      input.dispatchEvent(new Event('change',{bubbles:true}));
+      syncTrigger(input);
+    });
   }
   function syncTrigger(input){
     const trg=input._sciTrigger;
@@ -6404,13 +6422,22 @@ applyLanguage("en");
     trg.style.visibility=input.style.visibility||'visible';
     trg.style.display=input.disabled?'none':'inline-flex';
   }
+  function seriesColorInputs(input){
+    const list=input.closest('.cycle-list') || input.closest('[data-series-list]');
+    if(!list) return [];
+    return [...list.querySelectorAll('input[type="color"]')].filter(i=>{
+      if(i.disabled) return false;
+      if(i.hasAttribute('data-cyc-color')){
+        return i.closest('.cycle-item')?.querySelector('input[type="checkbox"][data-cyc]')?.checked===true;
+      }
+      return i.style.visibility!=='hidden';
+    });
+  }
   function applyPaletteToSeries(input){
-    const list=input.closest('.cycle-list') || input.closest('[data-series-list]') || input.parentElement?.parentElement;
-    if(!list) return false;
-    const inputs=[...list.querySelectorAll('input[type="color"]')].filter(i=>!i.disabled);
+    const inputs=seriesColorInputs(input);
     if(inputs.length<2) return false;
     const colors=PALETTES[currentPalette];
-    inputs.forEach((inp,i)=>setInputColor(inp,colors[i%colors.length]));
+    withChartRenderBatch(()=>inputs.forEach((inp,i)=>setInputColor(inp,colors[i%colors.length])));
     return true;
   }
 
@@ -6431,7 +6458,7 @@ applyLanguage("en");
     const actions=document.createElement('div');actions.className='sci-palette-actions';
     const custom=document.createElement('button');custom.type='button';custom.textContent=txt('custom');custom.addEventListener('click',()=>{close(); setTimeout(()=>input.click(),0);});
     const apply=document.createElement('button');apply.type='button';apply.textContent=txt('apply');
-    const canApply=!!(input.closest('.cycle-list')?.querySelectorAll('input[type="color"]').length>1);
+    const canApply=seriesColorInputs(input).length>1;
     apply.disabled=!canApply;apply.style.opacity=canApply?'1':'.45';apply.addEventListener('click',()=>{if(applyPaletteToSeries(input)) close();});
     actions.append(custom,apply);pop.appendChild(actions);
     const note=document.createElement('div');note.className='sci-palette-note';note.textContent=txt('note');pop.appendChild(note);
