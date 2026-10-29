@@ -1,10 +1,10 @@
 {
   "name": "echem-plot-studio",
-  "version": "1.24.16",
+  "version": "1.25.0",
   "private": true,
   "license": "SEE LICENSE IN LICENSE",
   "scripts": {
-    "test": "node test.cjs && node upload-test.cjs && node palette-test.cjs"
+    "test": "node test.cjs && node upload-test.cjs && node palette-test.cjs && node copy-data-test.cjs"
   },
   "devDependencies": {
     "playwright": "^1.56.0"

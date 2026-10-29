@@ -16,12 +16,12 @@ const fake=http.createServer((req,res)=>{res.setHeader('Content-Type','applicati
    await new Promise(r=>setTimeout(r,500));
   }
   assert.ok(url,'Launcher must report its actual URL');assert.notEqual(new URL(url).port,String(occupied));
-  const status=await(await fetch(url+'health')).json();assert.equal(path.resolve(status.root),root);assert.equal(status.version,'1.24.16');
+  const status=await(await fetch(url+'health')).json();assert.equal(path.resolve(status.root),root);assert.equal(status.version,'1.25.0');
   const second=start(occupied);let reused='';second.stdout.on('data',d=>reused+=d);second.stderr.on('data',d=>reused+=d);
   const exit=await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{spawnSync('taskkill',['/PID',String(second.pid),'/T','/F'],{windowsHide:true});reject(Error('Reuse did not finish'));},60000);second.once('exit',c=>{clearTimeout(timer);resolve(c);});});
   assert.equal(exit,0,reused);assert.ok(reused.includes('already running at '+url),reused);
   assert.equal((await(await fetch(`http://127.0.0.1:${occupied}/health`)).json()).reader,'old-reader');
-  const html=await(await fetch(url)).text();assert.ok(html.includes('const APP_VERSION = "1.24.16"'));
-  console.log('PASS: occupied port skipped; correct v1.24.16 served; matching instance reused; old service preserved.');
+  const html=await(await fetch(url)).text();assert.ok(html.includes('const APP_VERSION = "1.25.0"'));
+  console.log('PASS: occupied port skipped; correct v1.25.0 served; matching instance reused; old service preserved.');
  }finally{if(first.exitCode===null)spawnSync('taskkill',['/PID',String(first.pid),'/T','/F'],{windowsHide:true,stdio:'ignore'});await new Promise(r=>fake.close(r));}
 })().catch(e=>{console.error(e);process.exitCode=1;});

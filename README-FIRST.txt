@@ -1,4 +1,4 @@
-ECHEM PLOT STUDIO v1.24.16 - PYTHON NDAX ADD-ON
+ECHEM PLOT STUDIO v1.25.0 - PYTHON NDAX ADD-ON
 ================================================
 
 Start
