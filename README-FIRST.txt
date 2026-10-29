@@ -1,4 +1,4 @@
-ECHEM PLOT STUDIO v1.25.0 - PYTHON NDAX ADD-ON
+ECHEM PLOT STUDIO v1.26.0 - PYTHON NDAX ADD-ON
 ================================================
 
 Start
@@ -42,9 +42,24 @@ Tests
 -----
 python test_ndax_reader.py
 python test_ndax_server.py
+python test_origin_export.py
 npm test
 node launcher-port-test.cjs (Windows: occupied-port fallback and instance reuse)
 
 No research data, vendor DLLs, or compiled executables are published.
+
+Origin projects and clipboard columns (v1.26.0)
+---------------------------------------------
+Copy data defaults to one X/Y column pair per cycle, with blank padding and
+segment gaps. Select Table rows for the older long table. Include headers can
+be unchecked to paste numeric data only. In Origin, designate pasted columns
+XY XY. Export OPJU sets the column roles automatically and creates editable
+basic graphs plus the original source table.
+
+Native export needs installed/licensed Origin with its bundled Python (tested
+with Origin 2024). If it is not found, put the full Origin64.exe path in a local
+origin_executable.txt. No registry changes or extra Origin Python packages are
+needed. Export uses a new hidden Origin process and does not attach to an
+existing project. All parsing and export remain on this computer.
 The NewareNDA dependency and its license remain under .runtime/python;
 see THIRD-PARTY-NOTICES.md. The project's original LICENSE is unchanged.

@@ -4,3 +4,4 @@ Thumbs.db
 .runtime/
 __pycache__/
 node_modules/
+origin_executable.txt

@@ -4,21 +4,33 @@ Browser-based electrochemical data visualization and analysis tool for CSV and E
 
 ## Current release
 
-Version **1.25.0** (2026-10-29)
+Version **1.26.0** (2026-10-29)
 
 ## Run the tool
+
+### Origin-ready X/Y columns and native OPJU (v1.26.0)
+
+**Copy data** defaults to **Origin: separate X/Y pairs**. Every selected cycle has its own adjacent X/Y columns; different-length curves are padded with empty cells. Segment transitions insert empty X/Y cells instead of joining charge/discharge branches. Select **Table rows** to keep the earlier long table, or uncheck **Include headers** to copy numbers only. When pasting plain text into Origin, designate the columns `XY XY`; plain-text clipboard data cannot set Origin's column roles.
+
+**Export OPJU** creates a genuine project using your installed, licensed Origin in a new hidden process. It creates a `Data` worksheet with alternating X/Y designations, a `SourceData` worksheet retaining the original table, and basic editable graphs. Different physical units and Y axes are exported as separate graphs; styling/layout may differ from the browser. No existing Origin session or project is used.
+
+Run through `Start Echem Plot Studio.cmd`. Origin's bundled Python and `originpro` must be available (tested with Origin 2024). No external Origin automation package or COM registration is required: the exporter uses Origin's documented `-hs -rs` / `run -pyf` interface. If auto-detection fails, save the full `Origin64.exe` path in a local `origin_executable.txt`, or set `ECHEM_ORIGIN_EXE`. This machine-specific file is ignored by Git. Export is local; Origin itself is not distributed.
+
+The command-line tool is `python origin_export.py data.json output.opju`; it refuses to overwrite an existing output. Native projects were saved and reopened in Origin to verify separate cycle columns, numeric data and editable graphs.
+
+Validation on 2026-10-29: all four package browser tests, nine local HTTP tests, six Origin payload/grouping tests and the occupied-port/reuse test passed. A browser-generated OPJU was downloaded and reopened in Origin 2024; independent cycle X/Y columns, alternating X/Y designations, numeric values and editable graphs were checked. A full local NDAX import also retained all selected source points in wide clipboard data. Tests used simulated clipboard writes; native project tests used synthetic data, and no research inputs or outputs are distributed.
 
 ### Copy data (v1.25.0)
 
 Every page has **Copy data**. Nyquist voltage/time and the three overpotential diagnostic charts have their own buttons. DRT copies the active single/batch tau–gamma spectrum; Battery Info, Instructions, and Changelog copy their corresponding tables/text.
 
-Copy uses tab-separated columns with headers and available units, preserving numeric precision and missing values. Selected curves and current analysis parameters are respected. Curve data is exported before display decimation; axis zoom/cropping does not discard source points. Custom axes include effective units for each battery/Y axis. Paste into Excel or Origin; save the resulting project from Origin if an `.opju` file is needed. This release does not write native `.opju` files directly.
+Copy uses tab-separated columns with headers and available units, preserving numeric precision and missing values. Selected curves and current analysis parameters are respected. Curve data is exported before display decimation; axis zoom/cropping does not discard source points. Custom axes include effective units for each battery/Y axis. Paste into Excel or Origin; save the resulting project from Origin if an `.opju` file is needed. Use the new Export OPJU button for native project export when running through the local launcher with Origin installed.
 
 If automatic clipboard access is denied, a dialog selects the table for manual Ctrl+C. An empty analysis reports that data must be loaded/computed first. `data-copy.js` is embedded unchanged in the release HTML, so no separate runtime script is required for this feature.
 
 Validation on 2026-10-29: all four package browser tests and six HTTP API tests passed. Copy-specific checks cover all pages/subcharts, selected and computed data, DRT synthetic analysis, precision, effective units (including same-named batteries), TSV quoting, empty states, localization, and manual fallback. A local NDAX import also verified full-resolution selected-curve copying and the existing palette fix. Clipboard writes were simulated during testing so the user's clipboard was preserved; no research input/output is distributed.
 
-Download `index.html` or `Echem_Plot_Studio_v1.25.0.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
+Download `index.html` or `Echem_Plot_Studio_v1.26.0.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
 
 Supported directly in the browser:
 
@@ -28,7 +40,7 @@ Supported directly in the browser:
 
 For `.ndax` import on Windows, download the whole repository and double-click **`Start Echem Plot Studio.cmd`**. Keep its command window open and use the page it opens at `http://127.0.0.1:8765/`. The optional Python reader (`ndax_reader.py`) uses [NewareNDA](https://github.com/d-cogswell/NewareNDA); Python 3.9+ is required. First setup installs `requirements_ndax.txt` into `.runtime/python`. This reader does not use the legacy compiled executable or NEWARE vendor DLLs. See `README-FIRST.txt`.
 
-Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.25.0 interface is used by both entry methods.
+Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.26.0 interface is used by both entry methods.
 
 Python add-on validation (2026-10-29): six conversion tests and six HTTP bridge tests passed. A locally held NDAX file was also imported through the actual launcher in Edge, retaining all source records and rendering retention and GCD charts without browser errors. The research file is not distributed. Existing Custom Axes and CSV upload browser tests were rerun and passed.
 

@@ -12,7 +12,7 @@ const {chromium}=require('playwright');
    Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async value=>{window.copiedTexts.push(value);}}});
   });
   const html=fs.readFileSync(`Echem_Plot_Studio_v${require('./package.json').version}.html`,'utf8');
-  assert.ok(html.includes('<script id="pageDataCopyV1250">\n'+fs.readFileSync('data-copy.js','utf8')+'\n</script>'),'Embedded source must match data-copy.js');
+  assert.ok(html.includes('<script id="pageDataCopyV1260">\n'+fs.readFileSync('data-copy.js','utf8')+'\n</script>'),'Embedded source must match data-copy.js');
   await page.goto('file:///'+path.resolve(`Echem_Plot_Studio_v${require('./package.json').version}.html`).replace(/\\/g,'/'));
   await page.waitForFunction(()=>window.EchemDataCopy);
   assert.equal(await page.locator('.tabpanel > .page-data-copy').count(),14);
@@ -67,11 +67,26 @@ const {chromium}=require('playwright');
    check(api.collect('overpotential').rows.length===1,'Overpotential summary');check(api.collect('overpotential-overview').rows.length===41,'Full overview data');
    check(api.collect('overpotential-dvdt').rows.length===41,'Full dV/dt data');check(api.collect('overpotential-sensitivity').rows.length===28,'Sensitivity threshold scan');
    check(api.collect('battery-info').rows.length>0&&api.collect('instructions').rows.length>0&&api.collect('changelog').rows.length>0,'Metadata and reference pages');
+   const wideDerivative=api.wideData('dqdv');check(wideDerivative.headers.length===Object.keys(App.tabState.dqdv.selectedCycles).length*2,'One derivative X/Y pair per selected cycle');
+   App.sheets.WideFixture={headers:['Cycle','Capacity (mAh)','Voltage (V)','Step'],rows:[
+    {Cycle:1,'Capacity (mAh)':1,'Voltage (V)':10,Step:'charge'},
+    {Cycle:1,'Capacity (mAh)':2,'Voltage (V)':20,Step:'charge'},
+    {Cycle:1,'Capacity (mAh)':3,'Voltage (V)':30,Step:'discharge'},
+    {Cycle:2,'Capacity (mAh)':4,'Voltage (V)':40,Step:'charge'}]};
+   App.tabState.gcd.sheet='WideFixture';App.tabState.gcd.selectedCycles={1:'#123456',2:'#654321'};
+   [['col-cycle','Cycle'],['col-capacity','Capacity (mAh)'],['col-voltage','Voltage (V)'],['col-step','Step']].forEach(([role,value])=>select('gcd',role,value));
+   const wide=api.wideData('gcd');check(wide.headers.length===4&&wide.rows.length===4,'Separate cycle pairs and uneven lengths');
+   check(JSON.stringify(wide.rows)===JSON.stringify([[1,10,4,40],[2,20,null,null],[null,null,null,null],[3,30,null,null]]),'Segment gaps and blank padding preserve independent XY order');
+   check(wide.headers[0].includes('Cycle 1')&&wide.headers[2].includes('Cycle 2'),'Cycle-specific column labels');
+   check(!api.serialize(wide,false).includes('Cycle'),'Numeric-only clipboard option');
+   check(api.originPayload('gcd').plots[0].group.length===1&&api.originPayload('gcd').plots[0].segment===1,'Native export uses the same cycle/segment semantics');
    return {gcdRows:gcd.rows.length,dqdvRows:dq.rows.length,scans};
   });
   await page.locator('[data-copy-data="gcd"]').evaluate(button=>button.click());
   await page.waitForFunction(()=>window.copiedTexts.length===1);
   assert.ok((await page.evaluate(()=>copiedTexts[0])).includes('\t'));
+  assert.equal(await page.locator('[data-copy-format="gcd"]').inputValue(),'wide');
+  assert.equal(await page.locator('[data-origin-export]').count(),18);
   await page.locator('#langSwitch [data-lang="zh-TW"]').evaluate(button=>button.click());
   assert.equal(await page.locator('[data-copy-data="gcd"]').innerText(),'拷貝數據');
   await page.evaluate(()=>{

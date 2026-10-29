@@ -37,7 +37,7 @@ class BridgeTests(unittest.TestCase):
             with urlopen(self.url + '/health') as response:
                 status = json.load(response)
         self.assertTrue(status['ok'])
-        self.assertEqual(status['version'], '1.25.0')
+        self.assertEqual(status['version'], '1.26.0')
         self.assertEqual(status['root'], str(api.ROOT))
 
     def test_upload_returns_extractor_workbook(self):
@@ -71,6 +71,27 @@ class BridgeTests(unittest.TestCase):
         with self.assertRaises(HTTPError) as caught:
             urlopen(self.post('fixture.csv'))
         self.assertEqual(caught.exception.code, 415)
+
+    def test_origin_unavailable_never_returns_project_bytes(self):
+        payload = {'headers': ['X', 'Y'], 'rows': [[1, 2]], 'plots': []}
+        request = Request(self.url + '/api/origin/export', data=json.dumps(payload).encode(), headers={'Content-Type': 'application/json'})
+        with patch.object(api, 'origin_status', return_value={'available': False, 'error': 'Origin is not installed'}):
+            with self.assertRaises(HTTPError) as caught:
+                urlopen(request)
+        self.assertEqual(caught.exception.code, 503)
+        self.assertIn('not installed', json.load(caught.exception)['error'])
+
+    def test_origin_invalid_table_rejected(self):
+        request = Request(self.url + '/api/origin/export', data=b'{"headers":["X"],"rows":[[1,2]]}', headers={'Content-Type': 'application/json'})
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(request)
+        self.assertEqual(caught.exception.code, 400)
+
+    def test_origin_cross_origin_request_rejected(self):
+        request = Request(self.url + '/api/origin/export', data=b'{}', headers={'Content-Type': 'application/json', 'Origin': 'https://example.invalid'})
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(request)
+        self.assertEqual(caught.exception.code, 403)
 
 
 if __name__ == '__main__':
