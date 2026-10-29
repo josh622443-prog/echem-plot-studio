@@ -1,4 +1,4 @@
-param([switch]$NoBrowser, [switch]$CheckOnly, [int]$Port = 8765)
+param([switch]$NoBrowser, [switch]$CheckOnly, [ValidateRange(1,65535)][int]$Port = 8765)
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 Set-Location -LiteralPath $root
@@ -50,27 +50,40 @@ if ($LASTEXITCODE -ne 0) {
   & $python $reader --check
   if ($LASTEXITCODE -ne 0) { throw 'NDAX dependencies could not be loaded.' }
 }
-$url = "http://127.0.0.1:$Port/"
 if ($CheckOnly) { Write-Stage 'Python NDAX reader is ready.'; return }
-$existing = $null
-try {
-  $existing = Invoke-RestMethod ($url+'health') -TimeoutSec 1
-} catch { }
-if ($existing) {
-  if ($existing.reader -ne 'newarenda-python' -or $existing.service -ne 'ndax-api' -or $existing.version -ne '1.24.16' -or $existing.root -ne $root) {
-    throw "Another application or older Echem server is using port $Port. Close its launcher, or run this script with a different -Port."
-  }
-  if (-not $NoBrowser) { Start-Process $url }
-  Write-Host "Echem Plot Studio is already running at $url"
-  return
+function Test-CurrentServer($status) {
+  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.24.16' -and $status.root -eq $root
 }
+$chosenPort = $null
+foreach ($candidatePort in $Port..([Math]::Min(65535,$Port+20))) {
+  $candidateUrl = "http://127.0.0.1:$candidatePort/"
+  $existing = $null
+  try { $existing = Invoke-RestMethod ($candidateUrl+'health') -TimeoutSec 1 } catch { }
+  if (Test-CurrentServer $existing) {
+    if (-not $NoBrowser) { Start-Process $candidateUrl }
+    Write-Host "Echem Plot Studio is already running at $candidateUrl"
+    return
+  }
+  $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback,$candidatePort)
+  try {
+    $listener.Start()
+    $chosenPort = $candidatePort
+  } catch {
+    Write-Stage "Port $candidatePort is occupied; checking another local port..."
+  } finally { $listener.Stop() }
+  if ($null -ne $chosenPort) { break }
+}
+if ($null -eq $chosenPort) { throw 'No available local port was found in the startup range.' }
+$Port = $chosenPort
+$url = "http://127.0.0.1:$Port/"
 
 $serverScript = Join-Path $root 'ndax_api_server.py'
 $server = Start-Process -FilePath $python -ArgumentList @(('"' + $serverScript + '"'), '--port', $Port) -WorkingDirectory $root -PassThru -WindowStyle Hidden
 $started = $false
 for ($i=0; $i-lt 40; $i++) {
   Start-Sleep -Milliseconds 250
-  try { Invoke-RestMethod ($url+'health') -TimeoutSec 1 | Out-Null; $started=$true; break } catch { }
+  if ($server.HasExited) { break }
+  try { if (Test-CurrentServer (Invoke-RestMethod ($url+'health') -TimeoutSec 1)) { $started=$true; break } } catch { }
 }
 if (-not $started) { if (-not $server.HasExited) { Stop-Process -Id $server.Id -Force }; throw 'The local server did not start.' }
 if (-not $NoBrowser) { Start-Process $url }

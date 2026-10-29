@@ -24,6 +24,8 @@ Python add-on validation (2026-10-29): six conversion tests and six HTTP bridge 
 
 ## v1.24.16 palette fix
 
+The Windows launcher also skips occupied local ports automatically, reuses a matching running instance, and verifies the served package before opening the browser. Its default port is 8765; use the URL opened by the launcher if another service already occupies that port. `node launcher-port-test.cjs` checks fallback and reuse without stopping existing services.
+
 Applying a palette updates only checked series and defers chart rendering until all colors have changed. Each affected chart redraws once, avoiding repeated full-data processing and accidental selection of unchecked cycles. Individual swatches remain editable.
 
 `npm test` now includes `palette-test.cjs`, which exercises a 20-cycle synthetic dataset, verifies selection preservation and a single redraw, and checks individual color changes and browser responsiveness.

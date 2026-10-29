@@ -4,7 +4,10 @@ ECHEM PLOT STUDIO v1.24.16 - PYTHON NDAX ADD-ON
 Start
 -----
 Double-click "Start Echem Plot Studio.cmd" and use the page it opens at
-http://127.0.0.1:8765/. Keep the launcher window open while using NDAX.
+http://127.0.0.1:8765/ by default. If that port is occupied by another package
+or application, the launcher automatically chooses another available local port
+and opens its actual URL. It does not stop existing services. Launching the same
+package again reuses its current service. Keep the launcher window open while using NDAX.
 Opening the HTML directly still supports CSV/Excel, but not the NDAX API.
 
 Requirements
@@ -40,6 +43,7 @@ Tests
 python test_ndax_reader.py
 python test_ndax_server.py
 npm test
+node launcher-port-test.cjs (Windows: occupied-port fallback and instance reuse)
 
 No research data, vendor DLLs, or compiled executables are published.
 The NewareNDA dependency and its license remain under .runtime/python;
