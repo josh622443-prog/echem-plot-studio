@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use this software in your research, presentation, or publication, please cite it as below."
 type: software
 title: "Echem Plot Studio"
-version: 1.24.7
-date-released: 2026-09-12
+version: 1.24.15
+date-released: 2026-10-08
 authors:
   - family-names: "King"
     given-names: "Kuo-Feng"

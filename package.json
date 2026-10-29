@@ -1,0 +1,1 @@
+{"name":"echem-plot-studio","version":"1.24.15","private":true,"license":"SEE LICENSE IN LICENSE","scripts":{"test":"node test.cjs && node upload-test.cjs"},"devDependencies":{"playwright":"^1.56.0"}}

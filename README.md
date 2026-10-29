@@ -4,11 +4,11 @@ Browser-based electrochemical data visualization and analysis tool for CSV and E
 
 ## Current release
 
-Version **1.24.7** (2026-09-12)
+Version **1.24.15** (2026-10-08)
 
 ## Run the tool
 
-Download `index.html` and open it in a modern desktop browser. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
+Download `index.html` or `Echem_Plot_Studio_v1.24.15.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
 
 Supported directly in the browser:
 
@@ -17,6 +17,14 @@ Supported directly in the browser:
 - `.xls`
 
 The interface also accepts `.ndax`, but that proprietary binary format requires a separate local parsing server and BTSDA dependency that are **not included in this release**. Consequently, `.ndax` import does not work from a static GitHub Pages deployment. Convert the data to Excel/CSV first unless you have the local parser package.
+
+## v1.24.15 changes and validation
+
+- Parse elapsed durations such as `HH:MM:SS`, fractional seconds, durations over 24 hours, and day-prefixed durations in Custom Axes.
+- Refresh column mappings after loading or switching sheets, explicitly show unmapped columns, and report valid data-pair counts.
+- Run `npm install`, then `npm test` with Node.js and Microsoft Edge installed. Set `BROWSER_PATH` for a different Chromium executable.
+- Both browser test scripts were rerun successfully on 2026-10-29, including synthetic CSV file selection, `[0, 0.5, 1]` hour conversion, unit changes, plot styles, optional Y2, and empty-data diagnostics. No browser page errors were reported.
+- Tests use `baseline_v1.24.14.html` and `custom_axes_duration.csv`; generated JSON, SVG, and PNG files are local test outputs. See `REPAIR-NOTES-v1.24.15.md` for historical repair details and limits.
 
 ## Data privacy
 
@@ -36,7 +44,7 @@ If you use this software in research, a presentation, or a publication, please c
 ## Known limitations
 
 - The `.ndax` local parser/server is not included.
-- Automated tests and sample datasets are not yet included.
+- Automated regression tests cover Custom Axes duration parsing, unit conversion, chart controls, and synthetic CSV upload. They do not constitute full application or DRT regression coverage.
 - Browser compatibility has not yet been documented systematically.
 
 ## License
