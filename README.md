@@ -8,6 +8,16 @@ Version **1.26.0** (2026-10-29)
 
 ## Run the tool
 
+### Windows 下載與啟動
+
+請從 [目前主分支](https://github.com/josh622443-prog/echem-plot-studio/tree/main) 選擇 **Code → Download ZIP**，完整解壓縮後，再雙擊 **Start Echem Plot Studio.cmd**。網址含 `/tree/a5d8d3f...` 的頁面是固定的舊版快照，不會隨主分支更新。
+
+資料夾內的多個 `Echem_Plot_Studio_v*.html` 是保留的歷史版本，不需要逐一開啟。啟動器會開啟目前的 **v1.26.0**；`index.html` 與目前版本內容相同。請保留整個解壓縮資料夾，勿只下載 `.cmd` 或混用舊版檔案。
+
+首次啟動需要 Python 3.9 以上與網路，啟動器會將缺少的 NDAX 套件安裝到此資料夾的 `.runtime/python`。2026-11-02 已修正 Windows PowerShell 5.1 在套件檢查遇到 `No module named 'NewareNDA'` 時提前停止、未執行自動安裝的問題。安裝失敗會顯示原因，啟動記錄位於 `%TEMP%\EchemPlotStudio-startup.log`。不用以系統管理員身分開啟。
+
+`node launcher-setup-test.cjs` uses synthetic reader and pip fixtures in an isolated temporary folder to check missing-dependency stderr, first setup, reuse and installation failure in Windows PowerShell. It does not download dependencies or modify the installed Python.
+
 ### Origin-ready X/Y columns and native OPJU (v1.26.0)
 
 **Copy data** defaults to **Origin: separate X/Y pairs**. Every selected cycle has its own adjacent X/Y columns; different-length curves are padded with empty cells. Segment transitions insert empty X/Y cells instead of joining charge/discharge branches. Select **Table rows** to keep the earlier long table, or uncheck **Include headers** to copy numbers only. When pasting plain text into Origin, designate the columns `XY XY`; plain-text clipboard data cannot set Origin's column roles.

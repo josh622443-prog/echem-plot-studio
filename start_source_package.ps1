@@ -6,6 +6,23 @@ $startupLog = Join-Path $env:TEMP 'EchemPlotStudio-startup.log'
 Set-Content -LiteralPath $startupLog -Value "Started $(Get-Date -Format o)" -Encoding UTF8
 function Write-Stage([string]$message) { Write-Host $message; Add-Content -LiteralPath $startupLog -Value $message -Encoding UTF8 }
 
+# Windows PowerShell 5.1 turns redirected native stderr into error records.
+# A failed dependency probe is expected on a fresh download, so inspect its
+# exit code instead of letting ErrorActionPreference=Stop abort installation.
+function Invoke-PythonLogged([string]$Executable, [string[]]$Arguments, [switch]$Quiet) {
+  $savedPreference = $ErrorActionPreference
+  try {
+    $ErrorActionPreference = 'Continue'
+    & $Executable @Arguments 2>&1 | ForEach-Object {
+      $line = "$_"
+      Add-Content -LiteralPath $startupLog -Value $line -Encoding UTF8
+      if (-not $Quiet) { Write-Host $line }
+    }
+    $exitCode = $LASTEXITCODE
+  } finally { $ErrorActionPreference = $savedPreference }
+  return $exitCode
+}
+
 function Find-Python {
   $candidates = @()
   if ($env:ECHEM_PYTHON) { $candidates += $env:ECHEM_PYTHON }
@@ -28,8 +45,8 @@ function Find-Python {
       $version = & $path -c 'import sys; print(sys.version_info[0] * 100 + sys.version_info[1])' 2>$null
       if ([int]$version -ge 309) {
         if (-not $fallbackPython) { $fallbackPython = (Resolve-Path -LiteralPath $path).Path }
-        & $path (Join-Path $root 'ndax_reader.py') --check 1>$null 2>$null
-        if ($LASTEXITCODE -eq 0) { return (Resolve-Path -LiteralPath $path).Path }
+        $probeExit = Invoke-PythonLogged -Executable $path -Arguments @((Join-Path $root 'ndax_reader.py'), '--check') -Quiet
+        if ($probeExit -eq 0) { return (Resolve-Path -LiteralPath $path).Path }
       }
     } catch { }
   }
@@ -42,13 +59,13 @@ $python = Find-Python
 Write-Stage "Python: $python"
 $reader = Join-Path $root 'ndax_reader.py'
 $runtimePackages = Join-Path $root '.runtime\\python'
-& $python $reader --check 2>$null
-if ($LASTEXITCODE -ne 0) {
+$probeExit = Invoke-PythonLogged -Executable $python -Arguments @($reader, '--check') -Quiet
+if ($probeExit -ne 0) {
   Write-Stage 'Installing local NDAX dependencies (first start requires internet)...'
-  & $python -m pip install --target $runtimePackages --upgrade --disable-pip-version-check -r (Join-Path $root 'requirements_ndax.txt')
-  if ($LASTEXITCODE -ne 0) { throw 'NDAX dependency installation failed. Check the internet connection and Python installation.' }
-  & $python $reader --check
-  if ($LASTEXITCODE -ne 0) { throw 'NDAX dependencies could not be loaded.' }
+  $installExit = Invoke-PythonLogged -Executable $python -Arguments @('-m', 'pip', 'install', '--target', $runtimePackages, '--upgrade', '--disable-pip-version-check', '-r', (Join-Path $root 'requirements_ndax.txt'))
+  if ($installExit -ne 0) { throw "NDAX dependency installation failed. Check the internet connection and Python installation. Details: $startupLog" }
+  $probeExit = Invoke-PythonLogged -Executable $python -Arguments @($reader, '--check')
+  if ($probeExit -ne 0) { throw "NDAX dependencies could not be loaded. Details: $startupLog" }
 }
 if ($CheckOnly) { Write-Stage 'Python NDAX reader is ready.'; return }
 function Test-CurrentServer($status) {

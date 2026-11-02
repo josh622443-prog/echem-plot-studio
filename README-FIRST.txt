@@ -3,6 +3,14 @@ ECHEM PLOT STUDIO v1.26.0 - PYTHON NDAX ADD-ON
 
 Start
 -----
+Download the current main branch, rather than a /tree/<commit> snapshot:
+https://github.com/josh622443-prog/echem-plot-studio/tree/main
+Use Code > Download ZIP, then extract the entire ZIP before starting.
+Historical Echem_Plot_Studio_v*.html and baseline*.html files are retained in
+the source repository. They are not separate installations. The launcher opens
+the current v1.26.0 automatically; index.html is its identical current entry.
+Do not mix launcher/server files from different snapshots.
+
 Double-click "Start Echem Plot Studio.cmd" and use the page it opens at
 http://127.0.0.1:8765/ by default. If that port is occupied by another package
 or application, the launcher automatically chooses another available local port
@@ -15,6 +23,9 @@ Requirements
 Python 3.9 or newer. The launcher looks for an installed Python and installs
 requirements_ndax.txt into this folder's .runtime/python on first use.
 First setup needs internet and a writable package folder. Parsing is local.
+Missing NewareNDA on the first dependency check triggers automatic setup.
+The launcher handles Windows PowerShell 5.1 stderr without stopping that setup.
+Startup details are recorded in %TEMP%\EchemPlotStudio-startup.log.
 No NEWARE BTSDA installation, .NET compiler, or custom EXE is required by
 the Python reader. The older C# reader source is retained for reference.
 
@@ -45,6 +56,7 @@ python test_ndax_server.py
 python test_origin_export.py
 npm test
 node launcher-port-test.cjs (Windows: occupied-port fallback and instance reuse)
+node launcher-setup-test.cjs (Windows: fresh setup, reuse, installation failure)
 
 No research data, vendor DLLs, or compiled executables are published.
 
