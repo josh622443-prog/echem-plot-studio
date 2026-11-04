@@ -1,5 +1,11 @@
 # Echem Plot Studio
 
+**Windows 使用者：[下載目前可用的 v1.26.0 Windows 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.26.0-Windows.zip)**
+
+完整解壓縮 → 雙擊 **Start Echem Plot Studio.cmd** → 首次連網安裝套件 → 使用自動開啟的頁面。需先安裝 Python 3.9 以上。使用包只含目前版本及必要檔案，無須挑選歷史 HTML。
+
+**下載位置提醒：** 右側 Releases 的 v1.24.7 是歷史發布；網址含 `/tree/300da08...` 或 `/tree/a5d8d3f...` 是固定的舊快照，沒有 2026-11-02 的啟動修正。請使用上方直接下載，或 [main 主分支](https://github.com/josh622443-prog/echem-plot-studio/tree/main) 的 Code → Download ZIP。
+
 Browser-based electrochemical data visualization and analysis tool for CSV and Excel data. The current release includes cycle-life, retention, charge/discharge, dQ/dV, rate-performance, EIS/Nyquist, multi-cell comparison, and integrated DRT analysis workflows.
 
 ## Current release
@@ -17,6 +23,8 @@ Version **1.26.0** (2026-10-29)
 首次啟動需要 Python 3.9 以上與網路，啟動器會將缺少的 NDAX 套件安裝到此資料夾的 `.runtime/python`。2026-11-02 已修正 Windows PowerShell 5.1 在套件檢查遇到 `No module named 'NewareNDA'` 時提前停止、未執行自動安裝的問題。安裝失敗會顯示原因，啟動記錄位於 `%TEMP%\EchemPlotStudio-startup.log`。不用以系統管理員身分開啟。
 
 `node launcher-setup-test.cjs` uses synthetic reader and pip fixtures in an isolated temporary folder to check missing-dependency stderr, first setup, reuse and installation failure in Windows PowerShell. It does not download dependencies or modify the installed Python.
+
+The Windows archive is built from an explicit runtime-file list with `powershell.exe -NoProfile -ExecutionPolicy Bypass -File build_windows_package.ps1`. Rebuild it when changing shipped files. It excludes research data, local dependencies, machine-specific Origin configuration and historical HTML files, while retaining licensing and citation notices.
 
 ### Origin-ready X/Y columns and native OPJU (v1.26.0)
 
