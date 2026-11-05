@@ -1,5 +1,7 @@
 # Echem Plot Studio
 
+**單一 HTML 版：[下載 Browser Edition](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem_Plot_Studio_v1.26.0_Browser.html)**。將檔案儲存為 `.html` 並用瀏覽器開啟。支援 TXT、CSV、XLSX 和 XLS，以及圖表和數據拷貝。無需 Python 或本機伺服器。頁面透過網路載入瀏覽器套件，不提供 NDAX 匯入或原生 OPJU 匯出。可用 `python build_standalone_html.py` 從目前版本重新產生。
+
 **macOS 使用者：[下載 v1.26.0 macOS 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.26.0-macOS.zip)**
 
 解壓縮後，TXT、CSV 和 Excel 可直接用瀏覽器開啟 **index.html**。匯入 NDAX 請先安裝 [Python 3.10 以上](https://www.python.org/downloads/macos/)（建議 Python 3.12），再雙擊 **Start Echem Plot Studio.command**。首次安裝套件需連網，使用時請保持 Terminal 開啟。原生 OPJU 匯出需要 Windows 上已安裝並授權的 Origin。
