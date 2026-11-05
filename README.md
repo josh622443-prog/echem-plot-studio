@@ -1,5 +1,9 @@
 # Echem Plot Studio
 
+**macOS 使用者：[下載 v1.26.0 macOS 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.26.0-macOS.zip)**
+
+解壓縮後，TXT、CSV 和 Excel 可直接用瀏覽器開啟 **index.html**。匯入 NDAX 請先安裝 [Python 3.10 以上](https://www.python.org/downloads/macos/)（建議 Python 3.12），再雙擊 **Start Echem Plot Studio.command**。首次安裝套件需連網，使用時請保持 Terminal 開啟。原生 OPJU 匯出需要 Windows 上已安裝並授權的 Origin。
+
 **Windows 使用者：[下載目前可用的 v1.26.0 Windows 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.26.0-Windows.zip)**
 
 完整解壓縮 → 雙擊 **Start Echem Plot Studio.cmd** → 首次連網安裝套件 → 使用自動開啟的頁面。需先安裝 Python 3.9 以上。使用包只含目前版本及必要檔案，無須挑選歷史 HTML。

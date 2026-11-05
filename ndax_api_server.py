@@ -135,7 +135,12 @@ if __name__ == "__main__":
     p.add_argument("--port", type=int, default=8765)
     p.add_argument("--open", action="store_true")
     args = p.parse_args()
-    url = f"http://{args.host}:{args.port}/"
-    print(f"Echem Plot Studio: {url}", flush=True)
-    if args.open: webbrowser.open(url)
-    ThreadingHTTPServer((args.host, args.port), Handler).serve_forever()
+    with ThreadingHTTPServer((args.host, args.port), Handler) as server:
+        url = f"http://{args.host}:{server.server_port}/"
+        print(f"Echem Plot Studio: {url}", flush=True)
+        if args.open:
+            webbrowser.open(url)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass

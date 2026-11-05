@@ -1,0 +1,18 @@
+Echem Plot Studio v1.26.0 for macOS
+
+1. Extract the ZIP to a writable folder.
+2. For TXT, CSV and Excel, open index.html in your browser.
+3. For NDAX, install Python 3.10 or newer (3.12 recommended):
+   https://www.python.org/downloads/macos/
+   The universal2 installer supports Intel and Apple Silicon Macs.
+4. Double-click Start Echem Plot Studio.command. On the first run, keep your
+   internet connection active while dependencies install into this folder.
+   The launcher prints a local URL and opens it in your default browser.
+   Keep Terminal open while using NDAX. Press Control+C to stop the server.
+
+If Finder does not start the launcher, open Terminal, type /bin/bash followed
+by a space, drag Start Echem Plot Studio.command into Terminal, then press Return.
+
+You can copy the plot data into another program on macOS. Native .opju export
+requires the Windows package and an installed, licensed copy of Origin.
+Browser libraries and fonts may require an internet connection.
