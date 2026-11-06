@@ -345,7 +345,7 @@
       <div class="status-row"><span class="label" data-i18n="status_file">檔案</span><span class="value" id="fileNameLabel" data-i18n="status_file_default">（尚未上傳，目前顯示示範數據）</span></div>
       <div class="status-row"><span class="label" data-i18n="status_sheet">工作表</span><div class="sheet-pills" id="sheetPills"><span class="sheet-pill demo" data-i18n="sheet_pill_demo">demo</span></div></div>
       <div class="status-row"><span class="label" data-i18n="status_columns">欄位</span><span class="value" id="columnsLabel">—</span></div>
-      <div class="status-row"><span class="label" data-i18n="status_ndax_mass">活性物質質量</span><span class="value"><input id="ndaxMassG" type="number" min="0.000001" step="0.00001" value="0.04563" style="width:92px"> g <span style="opacity:.65" data-i18n="status_ndax_mass_hint">（僅 .ndax 用）</span></span></div>
+      <div class="status-row"><span class="label" data-i18n="status_ndax_mass">活性物質質量</span><span class="value"><input id="ndaxMassG" type="number" readonly style="width:92px"> g <span style="opacity:.65" data-i18n="status_ndax_mass_hint">（僅 .ndax 用）</span></span></div>
       <div class="status-row" style="border-top:1px solid var(--line-soft);padding-top:8px;margin-top:2px;">
         <span class="label" data-i18n="status_auto">自動計算</span>
         <span class="value" id="autoComputeSummary" data-i18n="status_auto_default">—</span>
@@ -988,7 +988,7 @@
         <h3 data-i18n="instr_s2_title">2. 匯入 NEWARE .ndax 檔案</h3>
         <ul>
           <li data-i18n="instr_s2_p1">.ndax 需要同資料夾的 Python 讀取器與本機伺服器。請用「Start Echem Plot Studio.cmd」開啟頁面；此讀取器不需要 BTSDA。檔案只在本機解析。</li>
-          <li data-i18n="instr_s2_p2">上方「活性物質質量」欄位會影響 .ndax 匯入時算出來的比容量，記得改成你電池的實際質量再上傳。</li>
+          <li data-i18n="instr_s2_p2">匯入時請確認此樣品的活性物質質量（g）。若檔名含 45_55mg，程式會預填 0.04555 g。</li>
           <li data-i18n="instr_s2_p3">CSV / Excel 檔案不受影響，不需要本機伺服器，跟平常一樣拖曳上傳就能用。</li>
         </ul>
       </section>
@@ -1795,6 +1795,8 @@ const TRANSLATIONS = {
     dropzone_sub: "支援 .ndax / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention",
     status_ndax_mass: "活性物質質量",
     status_ndax_mass_hint: "（僅 .ndax 用）",
+    status_ndax_mass_prompt: "請確認此檔案的活性物質質量（g）。檔名若含 45_55mg，會建議 0.04555 g。",
+    status_ndax_mass_invalid: "請輸入大於零的活性物質質量（g）。",
     status_file: "檔案",
     status_sheet: "工作表",
     status_columns: "欄位",
@@ -2045,7 +2047,7 @@ const TRANSLATIONS = {
     instr_s1_p3: "如果檔案裡有多個工作表，各分頁可以分別選用不同的工作表（例如充放電曲線用逐點明細表，其他分頁用每圈一列的統計表）。",
     instr_s2_title: "2. 匯入 NEWARE .ndax 檔案",
     instr_s2_p1: ".ndax 需要同資料夾的 Python 讀取器與本機伺服器。請用「Start Echem Plot Studio.cmd」開啟頁面；此讀取器不需要 BTSDA。檔案只在本機解析。",
-    instr_s2_p2: "上方「活性物質質量」欄位會影響 .ndax 匯入時算出來的比容量，記得改成你電池的實際質量再上傳。",
+    instr_s2_p2: "匯入時請確認此樣品的活性物質質量（g）。若檔名含 45_55mg，程式會預填 0.04555 g。",
     instr_s2_p3: "CSV / Excel 檔案不受影響，不需要本機伺服器，跟平常一樣拖曳上傳就能用。",
     instr_s3_title: "3. 確認欄位對應",
     instr_s3_p1: "每個分頁的「數據來源」區塊可以手動調整用哪一欄當循環序號、容量、電壓等。",
@@ -2156,6 +2158,8 @@ const TRANSLATIONS = {
     dropzone_sub: "支持 .ndax / .csv / .txt / .xlsx / .xls · 上传后自动计算 Retention / CbC Retention",
     status_ndax_mass: "活性物质质量",
     status_ndax_mass_hint: "（仅 .ndax 用）",
+    status_ndax_mass_prompt: "请确认此文件的活性物质质量（g）。文件名若含 45_55mg，会建议 0.04555 g。",
+    status_ndax_mass_invalid: "请输入大于零的活性物质质量（g）。",
     status_file: "文件",
     status_sheet: "工作表",
     status_columns: "字段",
@@ -2406,7 +2410,7 @@ const TRANSLATIONS = {
     instr_s1_p3: "如果文件里有多个工作表，各分页可以分别选用不同的工作表（例如充放电曲线用逐点明细表，其他分页用每圈一行的统计表）。",
     instr_s2_title: "2. 导入 NEWARE .ndax 文件",
     instr_s2_p1: ".ndax 需要同文件夹的 Python 读取器与本地服务器。请用「Start Echem Plot Studio.cmd」打开页面；此读取器不需要 BTSDA。文件只在本地解析。",
-    instr_s2_p2: "上方「活性物质质量」字段会影响 .ndax 导入时算出来的比容量，记得改成你电池的实际质量再上传。",
+    instr_s2_p2: "导入时请确认此样品的活性物质质量（g）。若文件名含 45_55mg，程序会预填 0.04555 g。",
     instr_s2_p3: "CSV / Excel 文件不受影响，不需要本地服务器，跟平常一样拖入上传就能用。",
     instr_s3_title: "3. 确认字段对应",
     instr_s3_p1: "每个分页的「数据来源」区块可以手动调整用哪一列当循环序号、容量、电压等。",
@@ -2517,6 +2521,8 @@ const TRANSLATIONS = {
     dropzone_sub: "Supports .ndax / .csv / .txt / .xlsx / .xls · Retention / CbC Retention auto-computed after upload",
     status_ndax_mass: "Active material mass",
     status_ndax_mass_hint: "(.ndax only)",
+    status_ndax_mass_prompt: "Confirm the active material mass in grams. For example, 45_55mg in the filename suggests 0.04555 g.",
+    status_ndax_mass_invalid: "Enter an active material mass greater than zero (g).",
     status_file: "File",
     status_sheet: "Sheet",
     status_columns: "Columns",
@@ -2767,7 +2773,7 @@ const TRANSLATIONS = {
     instr_s1_p3: "If the file has multiple sheets, each tab can use a different one (e.g. a point-by-point detail sheet for the GCD curve, and a one-row-per-cycle summary sheet for the other tabs).",
     instr_s2_title: "2. Importing NEWARE .ndax files",
     instr_s2_p1: ".ndax requires the accompanying Python reader and local server. Open this page via \"Start Echem Plot Studio.cmd\". This reader does not require BTSDA; files are parsed locally.",
-    instr_s2_p2: "The \"Active material mass\" field above affects the specific capacity computed from .ndax imports — set it to your cell's actual mass before uploading.",
+    instr_s2_p2: "Confirm the active material mass (g) when importing. A filename containing 45_55mg suggests 0.04555 g.",
     instr_s2_p3: "CSV/Excel files are unaffected and don't need the local server — drag and drop them as usual.",
     instr_s3_title: "3. Check the column mapping",
     instr_s3_p1: "Each tab's \"Data source\" section lets you manually pick which column is the cycle number, capacity, voltage, etc.",
@@ -3352,7 +3358,19 @@ function parseTxtFile(file, onComplete, onError){
 }
 
 /* ---- 檔案解析 ---- */
-async function handleFiles(file){
+function ndaxMassFromFilename(name){
+  const stem = name.replace(/\.ndax$/i, "");
+  const matches = [...stem.matchAll(/(?:^|[^\p{L}\p{N}.+\-])(\d+(?:[._]\d+)*)\s*(mg|[µμu]g|g)(?![\p{L}\p{N}])/giu)];
+  if (matches.length !== 1) return "";
+  const [, value, unit] = matches[0];
+  if (!/^\d+(?:[._]\d+)?$/.test(value)) return "";
+  // Convert through an exponent to avoid displaying floating-point artifacts.
+  const shift = unit.toLowerCase() === "g" ? 0 : unit.toLowerCase() === "mg" ? -3 : -6;
+  const grams = Number(value.replace("_", ".") + "e" + shift);
+  return Number.isFinite(grams) && grams > 0 ? String(grams) : "";
+}
+
+async function handleFiles(file, confirmedMass){
   if(!file) return;
   const name=file.name.toLowerCase();
   setLoading(true, t("dropzone_loading"));
@@ -3361,7 +3379,15 @@ async function handleFiles(file){
     // 交給本機 Python NDAX 讀取器；詳見 README-FIRST.txt。
     try{
       const massInput = document.getElementById("ndaxMassG");
-      const mass = (massInput && massInput.value) || "0.04563";
+      const suggestion = ndaxMassFromFilename(file.name);
+      const inputMass = confirmedMass ?? prompt(t("status_ndax_mass_prompt"), suggestion);
+      if (inputMass === null) { setLoading(false); return; }
+      const mass = Number(inputMass);
+      if (!Number.isFinite(mass) || mass <= 0) {
+        setLoading(false);
+        alert(t("status_ndax_mass_invalid"));
+        return;
+      }
       const response = await fetch("/api/ndax?mass_g="+encodeURIComponent(mass), {
         method:"POST",
         headers:{"Content-Type":"application/octet-stream", "X-Filename":file.name},
@@ -3373,6 +3399,7 @@ async function handleFiles(file){
       App.excelBuffer = null;
       App.sheetNames = result.sheetNames;
       App.sheets = result.sheets;
+      massInput.value = String(mass);
       setLoading(false);
       onDataLoaded(file.name);
     }catch(err){
@@ -6520,10 +6547,9 @@ applyLanguage("en");
       }
       if (mass) {
         if (!mass.reportValidity()) return;
-        massInput.value = mass.value;
       }
       showTab("gcd");
-      handleFiles(file);
+      handleFiles(file, mass?.value);
     });
     row.append(open);
     return row;
@@ -6564,7 +6590,8 @@ applyLanguage("en");
   input.addEventListener("change", () => {
     entries = Array.from(input.files).filter(file => supported.test(file.name)).map(file => {
       const path = file.webkitRelativePath || file.name;
-      return {file, path, key: path.toLowerCase(), ndax: /\.ndax$/i.test(file.name), mass: ""};
+      const ndax = /\.ndax$/i.test(file.name);
+      return {file, path, key: path.toLowerCase(), ndax, mass: ndax ? ndaxMassFromFilename(file.name) : ""};
     });
     entries.sort((left, right) => left.path.localeCompare(right.path, undefined, {numeric: true}));
     input.value = "";

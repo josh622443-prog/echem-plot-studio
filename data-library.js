@@ -113,10 +113,9 @@
       }
       if (mass) {
         if (!mass.reportValidity()) return;
-        massInput.value = mass.value;
       }
       showTab("gcd");
-      handleFiles(file);
+      handleFiles(file, mass?.value);
     });
     row.append(open);
     return row;
@@ -157,7 +156,8 @@
   input.addEventListener("change", () => {
     entries = Array.from(input.files).filter(file => supported.test(file.name)).map(file => {
       const path = file.webkitRelativePath || file.name;
-      return {file, path, key: path.toLowerCase(), ndax: /\.ndax$/i.test(file.name), mass: ""};
+      const ndax = /\.ndax$/i.test(file.name);
+      return {file, path, key: path.toLowerCase(), ndax, mass: ndax ? ndaxMassFromFilename(file.name) : ""};
     });
     entries.sort((left, right) => left.path.localeCompare(right.path, undefined, {numeric: true}));
     input.value = "";
