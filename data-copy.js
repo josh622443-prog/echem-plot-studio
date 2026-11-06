@@ -37,11 +37,6 @@
       });
       return {headers:['Rate label','Start cycle','End cycle','N cycles averaged',q||'Average discharge capacity'],rows};
     }
-    if(page==='batch'){
-      const metric=field('batch','metric')||'retention',rows=[];
-      App.batchFiles.filter(f=>f.enabled).forEach(f=>{const series=getBatchMetricSeries(f,metric);if(series)series.x.forEach((x,i)=>rows.push([f.name,x,series.y[i]]));});
-      return {headers:['File','Cycle',metric],rows};
-    }
     if(page==='nyquist'){
       const c=field(page,'col-cycle'),re=field(page,'col-zre'),im=field(page,'col-zim'),f=field(page,'col-freq'),v=field(page,'col-voltage'),rows=getRows(page),out=[];
       if(c===NYQUIST_AUTO_GROUP_KEY)injectEisBlockGroups(rows,re,im);
@@ -140,7 +135,6 @@
     if(page==='overpotential')plot(0,9,[],'scatter');
     if(page==='overpotential-dvdt')plot(1,3,[0],'line',{logY:true});
     if(page==='overpotential-sensitivity')plot(1,2,[0]);
-    if(page==='batch')plot(1,2,[0],'scatter',{colors:Object.fromEntries(App.batchFiles.map(f=>[f.name,f.color]))});
     if(page==='drt')plot(6,7,[0,1,2],'line',{logX:true});
     if(page==='multicell'){
       const fields=new Map(payload.rows.map(row=>[JSON.stringify([row[4],row[5]]),[row[4],row[5]]]));

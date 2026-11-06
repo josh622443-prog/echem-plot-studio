@@ -8,7 +8,7 @@ const {chromium}=require('playwright');
   const version=require('./package.json').version;
   await page.goto('file:///'+path.resolve(`Echem_Plot_Studio_v${version}.html`).replace(/\\/g,'/'));
   await page.waitForFunction(()=>typeof App!=='undefined'&&document.querySelector('#controls-gcd .sci-color-trigger'));
-  await page.locator('#tabMenuTrigger').click();await page.locator('.tabbtn[data-tab="gcd"]').click();
+  await page.locator('.tabbtn[data-tab="gcd"]').click();
   await page.evaluate(()=>{
    const state=App.tabState.gcd,sheet=App.sheets[state.sheet],column=ctrlVal('gcd','col-cycle');
    const first=Number(sheet.rows[0][column]),seed=sheet.rows.filter(row=>Number(row[column])===first);

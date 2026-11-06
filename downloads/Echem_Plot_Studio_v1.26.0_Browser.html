@@ -176,7 +176,21 @@ of your licenses.
     font-size:14px;
     line-height:1.5;
   }
-  .app{max-width:1200px;margin:0 auto;padding:28px 24px 60px;}
+  .app{max-width:1480px;margin:0 auto;padding:28px 24px 60px;}
+  .studio-workspace{display:grid;grid-template-columns:minmax(230px,270px) minmax(0,1fr);gap:18px;align-items:start;}
+  .studio-main{min-width:0;}
+  .data-library{position:sticky;top:16px;min-width:0;padding:15px;background:var(--panel,#fff);border:1px solid var(--line);border-radius:12px;}
+  .data-library h2{margin:0 0 6px;font-size:17px;}
+  .data-library p{margin:0;font-size:12px;color:var(--muted);}
+  .library-controls{display:grid;gap:8px;margin:12px 0;}
+  #library-search{width:100%;min-width:0;padding:8px;}
+  #library-list{max-height:42vh;overflow-y:auto;margin-top:8px;}
+  .library-pagination{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px;}
+  @media (max-width:1050px){
+    .studio-workspace{grid-template-columns:minmax(0,1fr);}
+    .data-library{position:static;}
+    #library-list{max-height:28vh;}
+  }
 
   /* header */
   .app-header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
@@ -240,33 +254,16 @@ of your licenses.
   .sheet-pill.demo{color:var(--copper);border-color:var(--copper);}
 
   /* tabs（改成收合式下拉選單） */
-  .tab-menu{position:relative;width:fit-content;margin-bottom:18px;}
-  .tab-menu-trigger{
-    font-family:var(--font-display);font-weight:600;font-size:13.5px;
-    display:flex;align-items:center;gap:9px;
-    padding:10px 14px;border-radius:10px;
-    border:1px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;
-    min-width:230px;
-  }
-  .tab-menu-trigger:hover{border-color:var(--ink);}
-  .tab-menu-trigger .dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex-shrink:0;}
-  .tab-menu-trigger .tab-menu-label{flex:1;text-align:left;}
-  .tab-menu-chevron{color:var(--muted);font-size:11px;transition:transform .15s;}
-  .tab-menu.open .tab-menu-chevron{transform:rotate(180deg);}
-  .tabbar{
-    display:none;
-    position:absolute; top:calc(100% + 6px); left:0; z-index:50;
-    flex-direction:column; gap:2px;
-    background:#fff;border:1px solid var(--line);border-radius:10px;
-    padding:6px; min-width:250px; max-height:70vh; overflow-y:auto;
-    box-shadow:0 10px 28px rgba(28,35,33,.14);
-  }
-  .tab-menu.open .tabbar{display:flex;}
+  .analysis-navigation{margin-bottom:18px;}
+  .analysis-groups,.analysis-options{display:flex;flex-wrap:wrap;gap:6px;padding:6px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  .analysis-options{margin-top:8px;}
+  .analysis-options[hidden]{display:none;}
+  .analysis-group[aria-pressed="true"],.analysis-navigation .tabbtn.active{background:#e5f0eb;color:var(--ink);}
   .tabbtn{
     font-family:var(--font-display);font-weight:600;font-size:13px;
     border:none;background:transparent;color:var(--muted);
     padding:9px 12px;border-radius:7px;cursor:pointer;
-    display:flex;align-items:center;gap:9px;width:100%;text-align:left;
+    display:flex;align-items:center;gap:9px;text-align:left;
     transition:background .15s, color .15s;
   }
   .tabbtn .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;}
@@ -501,30 +498,32 @@ of your licenses.
     <input type="file" id="importSettingsInput" accept=".json" style="display:none">
   </div>
 
-  <div class="tab-menu" id="tabMenu">
-    <button class="tab-menu-trigger" id="tabMenuTrigger" type="button">
-      <span class="dot" id="tabMenuDot" style="color:#0070C0"></span>
-      <span class="tab-menu-label" id="tabMenuLabel" data-i18n="tab_gcd">充放電曲線</span>
-      <span class="tab-menu-chevron">▾</span>
-    </button>
-    <div class="tabbar" id="tabbar">
-    <button class="tabbtn active" data-tab="gcd" style="color:#0070C0"><span class="dot"></span><span data-i18n="tab_gcd">充放電曲線</span></button>
-    <button class="tabbtn" data-tab="dqdv" style="color:#FFA500"><span class="dot"></span><span data-i18n="tab_dqdv">dQ/dV</span></button>
-    <button class="tabbtn" data-tab="cyclelife" style="color:#C00000"><span class="dot"></span><span data-i18n="tab_cyclelife">循環壽命</span></button>
-    <button class="tabbtn" data-tab="retention" style="color:#00B050"><span class="dot"></span><span>Retention</span></button>
-    <button class="tabbtn" data-tab="cbc" style="color:#7030A0"><span class="dot"></span><span>CbC Retention</span></button>
-    <button class="tabbtn" data-tab="rate" style="color:#2E86AB"><span class="dot"></span><span data-i18n="tab_rate">倍率性能</span></button>
-    <button class="tabbtn" data-tab="nyquist" style="color:#C2410C"><span class="dot"></span><span data-i18n="tab_nyquist">Nyquist / EIS</span></button>
-    <button class="tabbtn" data-tab="drt" style="color:#0E7C74"><span class="dot"></span><span>DRT Analysis</span></button>
-    <button class="tabbtn" data-tab="overpotential" style="color:#5B21B6"><span class="dot"></span><span data-i18n="tab_overpotential">穩態過電位</span></button>
-    <button class="tabbtn" data-tab="batch" style="color:#0E7C74"><span class="dot"></span><span data-i18n="tab_batch">批次比較</span></button>
-    <button class="tabbtn" data-tab="multicell" style="color:#B5622A"><span class="dot"></span><span data-i18n="tab_multicell">多電池疊圖</span></button>
-    <button class="tabbtn" data-tab="battery-info" style="color:#8C4A1F"><span class="dot"></span><span data-i18n="tab_battery_info">電池資料</span></button>
-    <button class="tabbtn" data-tab="instructions" style="color:#6B7168"><span class="dot"></span><span data-i18n="tab_instructions">使用說明</span></button>
-    <button class="tabbtn" data-tab="changelog" style="color:#A0895C"><span class="dot"></span><span data-i18n="tab_changelog">更新日誌</span></button>
+  <div class="studio-workspace">
+    <aside id="data-library" class="data-library" aria-labelledby="library-title"></aside>
+    <main class="studio-main">
+  <nav class="analysis-navigation" aria-label="Studio analysis">
+    <div class="analysis-groups">
+      <button class="btn analysis-group" type="button" data-analysis-group="cycling" aria-pressed="true" aria-controls="cycling-options" data-i18n="group_cycling">循環與性能</button>
+      <button class="btn analysis-group" type="button" data-analysis-group="impedance" aria-pressed="false" aria-controls="impedance-options">EIS / DRT</button>
+      <button class="tabbtn" data-tab="multicell" style="color:#B5622A"><span class="dot"></span><span data-i18n="tab_multicell">多電池疊圖</span></button>
+      <button class="tabbtn" data-tab="battery-info" style="color:#8C4A1F"><span class="dot"></span><span data-i18n="tab_battery_info">電池資料</span></button>
+      <button class="tabbtn" data-tab="instructions" style="color:#6B7168"><span class="dot"></span><span data-i18n="tab_instructions">使用說明</span></button>
+      <button class="tabbtn" data-tab="changelog" style="color:#A0895C"><span class="dot"></span><span data-i18n="tab_changelog">更新日誌</span></button>
     </div>
-  </div>
-
+    <div class="analysis-options" id="cycling-options" data-analysis-options="cycling">
+      <button class="tabbtn active" data-tab="gcd" style="color:#0070C0"><span class="dot"></span><span data-i18n="tab_gcd">充放電曲線</span></button>
+      <button class="tabbtn" data-tab="dqdv" style="color:#FFA500"><span class="dot"></span><span data-i18n="tab_dqdv">dQ/dV</span></button>
+      <button class="tabbtn" data-tab="cyclelife" style="color:#C00000"><span class="dot"></span><span data-i18n="tab_cyclelife">循環壽命</span></button>
+      <button class="tabbtn" data-tab="retention" style="color:#00B050"><span class="dot"></span><span>Retention</span></button>
+      <button class="tabbtn" data-tab="cbc" style="color:#7030A0"><span class="dot"></span><span>CbC Retention</span></button>
+      <button class="tabbtn" data-tab="rate" style="color:#2E86AB"><span class="dot"></span><span data-i18n="tab_rate">倍率性能</span></button>
+      <button class="tabbtn" data-tab="overpotential" style="color:#5B21B6"><span class="dot"></span><span data-i18n="tab_overpotential">穩態過電位</span></button>
+    </div>
+    <div class="analysis-options" id="impedance-options" data-analysis-options="impedance" hidden>
+      <button class="tabbtn" data-tab="nyquist" style="color:#C2410C"><span class="dot"></span><span data-i18n="tab_nyquist">Nyquist / EIS</span></button>
+      <button class="tabbtn" data-tab="drt" style="color:#0E7C74"><span class="dot"></span><span>DRT Analysis</span></button>
+    </div>
+  </nav>
 
   <!-- ============ DRT ANALYSIS TAB (integrated DRT Console v2.1) ============ -->
   <div class="tabpanel" id="panel-drt">
@@ -980,57 +979,6 @@ of your licenses.
     </div>
   </div>
 
-  <!-- ============ BATCH COMPARISON TAB ============ -->
-  <div class="tabpanel" id="panel-batch">
-    <div class="workarea">
-      <div class="chart-card">
-        <div id="chart-batch"></div>
-        <div class="chart-toolbar">
-          <button class="btn" data-download-csv="batch" data-i18n="btn_download_csv">下載數據 (CSV)</button>
-          <button class="btn" data-download="svg" data-tab="batch" data-i18n="btn_download_svg">下載 SVG</button>
-          <button class="btn primary" data-download="png" data-tab="batch" data-i18n="btn_download_png">下載 PNG</button>
-        </div>
-      </div>
-      <div class="control-panel" id="controls-batch">
-        <div class="ctrl-section">
-          <h4 data-i18n="section_add_files">新增檔案</h4>
-          <div class="dropzone" id="batchDropzone" style="padding:14px;">
-            <div class="dz-icon" style="font-size:18px;margin-bottom:2px;">⇩</div>
-            <div class="dz-main" style="font-size:12.5px;" data-i18n="batch_dropzone_main">拖曳多個檔案，或點擊選擇</div>
-            <input type="file" id="batchFileInput" accept=".csv,.txt,.xlsx,.xls" multiple style="display:none">
-          </div>
-          <div class="chk-row" style="margin-top:6px;" data-i18n="hint_batch_upload">每個檔案會自動抓「cycle」或「summary」這類摘要工作表，不會載入逐點記錄表，速度較快</div>
-        </div>
-        <div class="ctrl-section">
-          <h4 data-i18n="section_metric">比較指標</h4>
-          <select data-role="metric">
-            <option value="retention" data-i18n="opt_metric_retention">Retention (%)</option>
-            <option value="cbc" data-i18n="opt_metric_cbc">CbC Retention (%)</option>
-            <option value="capacity" data-i18n="opt_metric_capacity">Discharge Capacity</option>
-            <option value="ce" data-i18n="opt_metric_ce">CE (%)</option>
-          </select>
-          <div class="ctrl-row" style="margin-top:8px;"><label data-i18n="label_shape">形狀</label>
-            <select data-role="shape">
-              <option value="circle" data-i18n="opt_shape_circle">圓形</option>
-              <option value="square" data-i18n="opt_shape_square">方形</option>
-              <option value="triangle" data-i18n="opt_shape_triangle">三角形</option>
-            </select>
-          </div>
-          <div class="chk-row" style="margin-top:8px;"><input type="checkbox" data-role="glossy"> <span data-i18n="label_glossy">立體球體樣式</span></div>
-        </div>
-        <div class="ctrl-section">
-          <h4 data-i18n="section_file_list">檔案列表</h4>
-          <div class="cycle-list" data-role="file-list" style="max-height:220px;"></div>
-        </div>
-        <div class="ctrl-section">
-          <h4 data-i18n="section_axes">座標軸</h4>
-          <div class="chk-row"><input type="checkbox" data-role="y-auto" checked> <span data-i18n="label_y_auto">Y 軸自動範圍</span></div>
-          <div class="ctrl-row tight"><label data-i18n="label_y_range">Y 範圍</label><div class="axis-pair"><input type="number" data-role="y-min" step="any" disabled><input type="number" data-role="y-max" step="any" disabled></div></div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ============ MULTI-CELL OVERLAY TAB ============ -->
   <div class="tabpanel" id="panel-multicell">
     <div class="mc-mode-switch" id="mcModeSwitch">
@@ -1218,19 +1166,8 @@ of your licenses.
       </section>
 
       <section class="instr-section">
-        <h3 data-i18n="instr_s8_title">8. 批次比較</h3>
+        <h3 data-i18n="instr_s9_title">8. 多電池疊圖比較</h3>
         <ul>
-          <li data-i18n="instr_s8_p1">獨立的多檔案上傳區，可以一次丟好幾個樣品的檔案疊在同一張圖上比較。</li>
-          <li data-i18n="instr_s8_p2">每個檔案只會自動抓「cycle」這類摘要工作表，不會載入逐點記錄表，速度比較快。</li>
-          <li data-i18n="instr_s8_p3">可以選擇比較 Retention、CbC Retention、放電容量或 CE；欄位是自動偵測，沒有手動選單，如果某個檔案抓不到需要的欄位，檔名旁邊會出現 ⚠ 提示。</li>
-          <li data-i18n="instr_s8_p4">每個檔案可以個別關閉顯示、換顏色、或移除；下載的 CSV 是「檔名、圈數、數值」的長格式，方便匯入其他軟體再處理。</li>
-        </ul>
-      </section>
-
-      <section class="instr-section">
-        <h3 data-i18n="instr_s9_title">9. 多電池疊圖比較</h3>
-        <ul>
-          <li data-i18n="instr_s9_p1">跟「批次比較」不一樣：這個分頁疊的是完整的電壓-容量曲線或 dQ/dV 曲線，不是單一摘要數值，而且可以自己選要看每顆電池的哪幾圈。</li>
           <li data-i18n="instr_s9_p2">三種模式：電壓-容量曲線、dQ/dV、自訂座標軸（X/Y1/Y2 自由選任意欄位，不限電壓容量）。</li>
           <li data-i18n="instr_s9_p3">每顆電池是一張可以收合的卡片，各自選工作表、欄位對應、要看哪幾圈；圈數可以打「1,5,10-20」這種清單，也能直接點選圈數方塊。</li>
           <li data-i18n="instr_s9_p4">「圈數校準」可以指定某顆電池「原始第幾圈」要當作圖上的第 1 圈，方便起始圈數不一致（例如接續測試）的電池對齊比較。</li>
@@ -1259,6 +1196,8 @@ of your licenses.
     </div>
   </div>
 
+    </main>
+  </div>
 </div>
 
 <script>
@@ -2062,7 +2001,7 @@ const TRANSLATIONS = {
     section_rate_segments: "倍率區間",
     btn_add_segment: "+ 新增區間",
     hint_rate_segments: "用起始/結束圈數定義每個倍率區間，會自動計算該區間的平均放電容量",
-    tab_batch: "批次比較",
+    group_cycling: "循環與性能",
     tab_multicell: "多電池疊圖",
     mc_mode_gcd: "電壓–容量曲線",
     mc_mode_gcd_sub: "每顆電池自選要看哪幾圈",
@@ -2249,13 +2188,7 @@ const TRANSLATIONS = {
     instr_s7_p1: "每張圖表下方可以下載 SVG（可編輯向量圖，能在 Illustrator、Inkscape 或 Origin 裡繼續編輯）或 PNG。",
     instr_s7_p2: "Retention 與 CbC Retention 分頁另外有「下載數據 (CSV)」，可以把算出來的數值匯出核對或另作他用。",
     instr_s7_p3: "最上方狀態欄的「下載合併結果」會把 Retention 跟 CbC Retention 的計算結果合併成一份 CSV 一次匯出。",
-    instr_s8_title: "8. 批次比較",
-    instr_s8_p1: "獨立的多檔案上傳區，可以一次丟好幾個樣品的檔案疊在同一張圖上比較。",
-    instr_s8_p2: "每個檔案只會自動抓「cycle」這類摘要工作表，不會載入逐點記錄表，速度比較快。",
-    instr_s8_p3: "可以選擇比較 Retention、CbC Retention、放電容量或 CE；欄位是自動偵測，沒有手動選單，如果某個檔案抓不到需要的欄位，檔名旁邊會出現 ⚠ 提示。",
-    instr_s8_p4: "每個檔案可以個別關閉顯示、換顏色、或移除；下載的 CSV 是「檔名、圈數、數值」的長格式，方便匯入其他軟體再處理。",
-    instr_s9_title: "9. 多電池疊圖比較",
-    instr_s9_p1: "跟「批次比較」不一樣：這個分頁疊的是完整的電壓-容量曲線或 dQ/dV 曲線，不是單一摘要數值，而且可以自己選要看每顆電池的哪幾圈。",
+    instr_s9_title: "8. 多電池疊圖比較",
     instr_s9_p2: "三種模式：電壓-容量曲線、dQ/dV、自訂座標軸（X/Y1/Y2 自由選任意欄位，不限電壓容量）。",
     instr_s9_p3: "每顆電池是一張可以收合的卡片，各自選工作表、欄位對應、要看哪幾圈；圈數可以打「1,5,10-20」這種清單，也能直接點選圈數方塊。",
     instr_s9_p4: "「圈數校準」可以指定某顆電池「原始第幾圈」要當作圖上的第 1 圈，方便起始圈數不一致（例如接續測試）的電池對齊比較。",
@@ -2421,7 +2354,7 @@ const TRANSLATIONS = {
     section_rate_segments: "倍率区间",
     btn_add_segment: "+ 新增区间",
     hint_rate_segments: "用起始/结束圈数定义每个倍率区间，会自动计算该区间的平均放电容量",
-    tab_batch: "批次比较",
+    group_cycling: "循环与性能",
     tab_multicell: "多电池叠图",
     mc_mode_gcd: "电压–容量曲线",
     mc_mode_gcd_sub: "每颗电池自选要看哪几圈",
@@ -2608,13 +2541,7 @@ const TRANSLATIONS = {
     instr_s7_p1: "每张图表下方可以下载 SVG（可编辑矢量图，能在 Illustrator、Inkscape 或 Origin 里继续编辑）或 PNG。",
     instr_s7_p2: "Retention 与 CbC Retention 分页另外有「下载数据 (CSV)」，可以把算出来的数值导出核对或另作他用。",
     instr_s7_p3: "最上方状态栏的「下载合并结果」会把 Retention 与 CbC Retention 的计算结果合并成一份 CSV 一次导出。",
-    instr_s8_title: "8. 批次比较",
-    instr_s8_p1: "独立的多文件上传区，可以一次丢好几个样品的文件叠在同一张图上比较。",
-    instr_s8_p2: "每个文件只会自动抓「cycle」这类摘要工作表，不会载入逐点记录表，速度比较快。",
-    instr_s8_p3: "可以选择比较 Retention、CbC Retention、放电容量或 CE；字段是自动检测，没有手动菜单，如果某个文件抓不到需要的字段，文件名旁边会出现 ⚠ 提示。",
-    instr_s8_p4: "每个文件可以单独关闭显示、换颜色、或移除；下载的 CSV 是「文件名、圈数、数值」的长格式，方便导入其他软件再处理。",
-    instr_s9_title: "9. 多电池叠图比较",
-    instr_s9_p1: "跟「批次比较」不一样：这个分页叠的是完整的电压-容量曲线或 dQ/dV 曲线，不是单一摘要数值，而且可以自己选要看每颗电池的哪几圈。",
+    instr_s9_title: "8. 多电池叠图比较",
     instr_s9_p2: "三种模式：电压-容量曲线、dQ/dV、自定义坐标轴（X/Y1/Y2 自由选任意字段，不限电压容量）。",
     instr_s9_p3: "每颗电池是一张可以收合的卡片，各自选工作表、字段对应、要看哪几圈；圈数可以打「1,5,10-20」这种清单，也能直接点选圈数方块。",
     instr_s9_p4: "「圈数校准」可以指定某颗电池「原始第几圈」要当作图上的第 1 圈，方便起始圈数不一致（例如接续测试）的电池对齐比较。",
@@ -2780,7 +2707,7 @@ const TRANSLATIONS = {
     section_rate_segments: "Rate segments",
     btn_add_segment: "+ Add segment",
     hint_rate_segments: "Define each rate segment by start/end cycle; the average discharge capacity over that range is computed automatically.",
-    tab_batch: "Batch Compare",
+    group_cycling: "Cycling & Performance",
     tab_multicell: "Multi-Cell Overlay",
     mc_mode_gcd: "Voltage–Capacity Curve",
     mc_mode_gcd_sub: "Pick which cycles to show per battery",
@@ -2967,13 +2894,7 @@ const TRANSLATIONS = {
     instr_s7_p1: "Each chart can be downloaded as SVG (an editable vector file you can keep working on in Illustrator, Inkscape, or Origin) or PNG.",
     instr_s7_p2: "The Retention and CbC Retention tabs also have \"Download data (CSV)\" to export the computed values for checking or other use.",
     instr_s7_p3: "\"Download combined (CSV)\" in the top status bar exports both Retention and CbC Retention results together in one file.",
-    instr_s8_title: "8. Batch Compare",
-    instr_s8_p1: "A separate multi-file upload area lets you drop several samples' files at once and overlay them on one chart.",
-    instr_s8_p2: "Each file only auto-detects a \"cycle\"-style summary sheet; raw point-by-point sheets aren't loaded, so it's fast.",
-    instr_s8_p3: "Choose to compare Retention, CbC Retention, discharge capacity, or CE. Columns are auto-detected with no manual dropdown — if a file is missing a needed column, a ⚠ appears next to its filename.",
-    instr_s8_p4: "Each file can be individually hidden, recolored, or removed. The downloaded CSV is a long-format table of file name, cycle, and value, ready to import elsewhere.",
     instr_s9_title: "9. Multi-Cell Overlay",
-    instr_s9_p1: "Different from \"Batch Compare\": this tab overlays full voltage-capacity or dQ/dV curves, not a single summary metric, and you choose which cycles to show for each battery.",
     instr_s9_p2: "Three modes: Voltage-Capacity Curve, dQ/dV, and Custom Axes (freely pick any column for X/Y1/Y2, not limited to voltage/capacity).",
     instr_s9_p3: "Each battery is a collapsible card with its own sheet, column mapping, and cycle selection; enter cycles as a list like \"1,5,10-20\" or click the cycle chips directly.",
     instr_s9_p4: "\"Cycle rebase\" lets you specify which raw cycle number should be treated as cycle 1 on the chart — useful for aligning batteries that don't start at the same cycle count (e.g. continued tests).",
@@ -3288,9 +3209,6 @@ const XLSX_CDN_URL = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.fu
 const EXACT_SHEET_NAMES_SRC = "^(cycle|record)$";
 // 找不到精準符合的名稱時，退回比較寬鬆的關鍵字比對當備案
 const RELEVANT_SHEET_PATTERN_SRC = "detail|record|明细|gcd|cycle|summary|循环";
-// 批次比較只需要「每圈一列」的摘要表，不需要 record 這種逐點大表，用比較窄的規則避免浪費時間解析用不到的大表
-const BATCH_EXACT_SHEET_NAMES_SRC = "^(cycle)$";
-const BATCH_RELEVANT_SHEET_PATTERN_SRC = "cycle|summary|循环";
 // 有些匯出檔（例如 EC-Lab）的表頭文字剛好以「=」開頭（像 "-Im(Z)/Ohm"），
 // 會被 Excel 誤判成公式，存成 #NAME? 這類錯誤值。這段負責偵測並修正回真正的表頭文字。
 const HEADER_FIX_FN_SRC = `
@@ -3641,34 +3559,32 @@ dz.addEventListener("drop",(e)=>{ if(e.dataTransfer.files.length) handleFiles(e.
 /* =========================================================
    5. 分頁切換
    ========================================================= */
+const analysisOptions = Array.from(document.querySelectorAll("[data-analysis-options]"));
+const analysisGroups = Array.from(document.querySelectorAll("[data-analysis-group]"));
+const analysisSelection = new Map();
+
 function selectStudioTab(btn){
-    document.querySelectorAll(".tabbtn").forEach(b=>b.classList.remove("active"));
-    document.querySelectorAll(".tabpanel").forEach(p=>p.classList.remove("active"));
-    btn.classList.add("active");
-    document.getElementById("panel-"+btn.dataset.tab).classList.add("active");
-    App.activeTab = btn.dataset.tab;
-    // 同步更新選單觸發鈕上顯示的目前分頁名稱/顏色，並收合選單
-    const labelSpan = btn.querySelector("span[data-i18n], span:not(.dot)");
-    const trigger = document.getElementById("tabMenuTrigger");
-    if(trigger && labelSpan){
-      document.getElementById("tabMenuLabel").textContent = labelSpan.textContent;
-      document.getElementById("tabMenuLabel").dataset.i18n = labelSpan.dataset.i18n || "";
-      document.getElementById("tabMenuDot").style.color = btn.style.color;
-    }
-    document.getElementById("tabMenu").classList.remove("open");
+  const tab = btn.dataset.tab;
+  const group = btn.closest("[data-analysis-options]")?.dataset.analysisOptions;
+  if (group) analysisSelection.set(group, btn);
+  analysisOptions.forEach(options => { options.hidden = options.dataset.analysisOptions !== group; });
+  analysisGroups.forEach(button => {
+    button.setAttribute("aria-pressed", String(button.dataset.analysisGroup === group));
+  });
+  document.querySelectorAll(".tabbtn").forEach(button => button.classList.toggle("active", button === btn));
+  document.querySelectorAll(".tabpanel").forEach(panel => panel.classList.toggle("active", panel.id === "panel-" + tab));
+  App.activeTab = tab;
 }
-document.querySelectorAll(".tabbtn").forEach(btn=>{
-  btn.addEventListener("click", ()=>selectStudioTab(btn));
+
+document.querySelectorAll(".tabbtn").forEach(btn => {
+  btn.addEventListener("click", () => selectStudioTab(btn));
 });
-document.getElementById("tabMenuTrigger").addEventListener("click", (e)=>{
-  e.stopPropagation();
-  document.getElementById("tabMenu").classList.toggle("open");
-});
-document.addEventListener("click", (e)=>{
-  const menu = document.getElementById("tabMenu");
-  if(menu.classList.contains("open") && !menu.contains(e.target)){
-    menu.classList.remove("open");
-  }
+analysisGroups.forEach(btn => {
+  btn.addEventListener("click", () => {
+    const group = btn.dataset.analysisGroup;
+    const options = analysisOptions.find(panel => panel.dataset.analysisOptions === group);
+    selectStudioTab(analysisSelection.get(group) || options.querySelector(".tabbtn"));
+  });
 });
 
 /* =========================================================
@@ -4063,7 +3979,7 @@ function downloadCSVFromComputed(tab){
 }
 
 document.querySelectorAll("[data-download-csv]").forEach(btn=>{
-  if(btn.dataset.downloadCsv === "batch" || btn.dataset.downloadCsv === "rate" || btn.dataset.downloadCsv === "multicell") return; // 這幾個分頁有自己的下載邏輯（資料來源不是 App.computedData）
+  if(btn.dataset.downloadCsv === "rate" || btn.dataset.downloadCsv === "multicell") return; // 這幾個分頁有自己的下載邏輯（資料來源不是 App.computedData）
   btn.addEventListener("click", ()=>downloadCSVFromComputed(btn.dataset.downloadCsv));
 });
 
@@ -4250,7 +4166,6 @@ function buildCombinedWorkbook(){
     ["Overpotential_dVdt",withMetadata(blank())],
     ["Overpotential_Sensitivity",withMetadata(blank())],
     ["Overpotential_Overview",withMetadata(blank())],
-    ["Batch",withMetadata({headers:["File","Cycle Index","Value"],rows:App.batchExportRows||[]})],
     ["MultiCell",withMetadata(collectMultiCellData())],
     ["DRT",withMetadata(collectDrtData())],
     ["DRT_Analysis",withMetadata(collectDrtAnalysisData())],
@@ -4308,7 +4223,6 @@ function renderTab(tab){
   if(tab==="cyclelife") return renderCycleLife();
   if(tab==="retention") return renderRetention();
   if(tab==="cbc") return renderCbC();
-  if(tab==="batch") return renderBatch();
   if(tab==="rate") return renderRate();
   if(tab==="nyquist") return renderNyquist();
   if(tab==="overpotential") return; // 靠「執行分析」按鈕手動觸發，不用跟著其他分頁自動重算
@@ -5981,234 +5895,9 @@ function renderNyquistVt(){
 }
 
 /* =========================================================
-   7.5 批次比較（多檔案疊圖）
-   ========================================================= */
-App.batchFiles = []; // {id, name, headers, rows, cols, color, enabled, warning}
-
-function addBatchFile(file){
-  if(!file) return;
-  const name = file.name.toLowerCase();
-  if(name.endsWith(".csv")){
-    Papa.parse(file, {
-      header:true, dynamicTyping:true, skipEmptyLines:true, worker:true,
-      complete: (res)=>{
-        const headers = res.meta.fields || Object.keys(res.data[0]||{});
-        registerBatchFile(file.name, headers, res.data);
-      },
-      error: (err)=> alert(t("alert_csv_fail")+err)
-    });
-  } else if(name.endsWith(".txt")){
-    parseTxtFile(file, (parsed)=>{
-      registerBatchFile(file.name, parsed.headers, parsed.rows);
-      console.info("Batch TXT import:", parsed.info);
-    }, (err)=> alert("TXT parse failed: "+err.message));
-  } else if(name.endsWith(".xlsx")||name.endsWith(".xls")){
-    const reader = new FileReader();
-    reader.onload = (e)=>{
-      const buffer = e.target.result;
-      parseExcelInWorker(buffer, BATCH_EXACT_SHEET_NAMES_SRC, BATCH_RELEVANT_SHEET_PATTERN_SRC).then(result=>{
-        const loadedNames = Object.keys(result.sheets);
-        if(loadedNames.length===0){ alert(t("alert_batch_no_sheet", {name:file.name})); return; }
-        const sn = loadedNames[0];
-        registerBatchFile(file.name, result.sheets[sn].headers, result.sheets[sn].rows);
-      }).catch(err=>{
-        console.warn("批次比較背景解析失敗，退回主執行緒單一工作表解析：", err);
-        setTimeout(()=>{
-          try{
-            const wb = XLSX.read(new Uint8Array(buffer), {
-              type:"array", cellText:false, cellDates:false, cellFormula:false, cellHTML:false,
-              bookVBA:false, bookFiles:false, bookProps:false, dense:true,
-            });
-            const pattern = new RegExp(BATCH_RELEVANT_SHEET_PATTERN_SRC, "i");
-            const sn = wb.SheetNames.find(n=>pattern.test(n)) || wb.SheetNames[0];
-            const ws = wb.Sheets[sn];
-            const json = XLSX.utils.sheet_to_json(ws, {defval:null});
-            let headers = json.length ? Object.keys(json[0]) : [];
-            const fixed = fixSheetHeadersMain(buffer, sn, ws, headers, json);
-            registerBatchFile(file.name, fixed.headers, fixed.rows);
-          }catch(err2){ alert(t("alert_excel_fail")+err2.message); }
-        }, 20);
-      });
-    };
-    reader.onerror = ()=>{ alert(t("alert_file_fail")); };
-    reader.readAsArrayBuffer(file);
-  } else {
-    alert(t("alert_unsupported"));
-  }
-}
-
-function registerBatchFile(name, headers, rows){
-  const detected = autoDetectColumns(headers);
-  const cols = {
-    cycle: detected.cycle,
-    discharge_capacity: detected.discharge_capacity || detected.capacity,
-    ce: detected.ce,
-    retention: detected.retention,
-    cbc_retention: detected.cbc_retention,
-  };
-  const color = PALETTE[App.batchFiles.length % PALETTE.length];
-  const id = "bf_" + Date.now() + "_" + Math.random().toString(36).slice(2,8);
-  App.batchFiles.push({ id, name, headers, rows, cols, color, enabled:true, warning:false });
-  renderBatchFileList();
-  renderTab("batch");
-}
-
-function renderBatchFileList(){
-  const listEl = document.querySelector('#controls-batch [data-role="file-list"]');
-  if(!listEl) return;
-  listEl.innerHTML = "";
-  if(App.batchFiles.length===0){
-    const empty = document.createElement("div");
-    empty.style.cssText = "font-size:12px;color:var(--muted);padding:4px 0;";
-    empty.textContent = t("batch_empty_hint");
-    empty.dataset.i18n = "batch_empty_hint";
-    listEl.appendChild(empty);
-    return;
-  }
-  App.batchFiles.forEach(f=>{
-    const row = document.createElement("div");
-    row.className = "cycle-item";
-    row.innerHTML = `
-      <input type="checkbox" ${f.enabled?"checked":""}>
-      <input type="color" value="${f.color}">
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${f.name}">${f.name}${f.warning?' \u26a0\ufe0f':''}</span>
-      <button class="btn" style="padding:1px 7px;font-size:12px;line-height:1.4;" title="remove">\u00d7</button>
-    `;
-    listEl.appendChild(row);
-    const [checkboxEl, colorEl, , removeBtn] = row.children;
-    checkboxEl.addEventListener("change", e=>{ f.enabled = e.target.checked; renderTab("batch"); });
-    colorEl.addEventListener("input", e=>{ f.color = e.target.value; renderTab("batch"); });
-    removeBtn.addEventListener("click", ()=>{
-      App.batchFiles = App.batchFiles.filter(x=>x.id!==f.id);
-      renderBatchFileList();
-      renderTab("batch");
-    });
-  });
-}
-
-function getBatchMetricSeries(f, metric){
-  const cycleCol = f.cols.cycle;
-  if(!cycleCol) return null;
-  const cyc = numCol(f.rows, cycleCol);
-
-  if(metric === "capacity"){
-    if(!f.cols.discharge_capacity) return null;
-    const cap = numCol(f.rows, f.cols.discharge_capacity);
-    const [x,y] = pairwiseClean(cyc, cap);
-    return x.length ? {x,y} : null;
-  }
-  if(metric === "ce"){
-    if(!f.cols.ce) return null;
-    const ce = numCol(f.rows, f.cols.ce);
-    const [x,y] = pairwiseClean(cyc, ce);
-    return x.length ? {x,y} : null;
-  }
-  if(metric === "retention"){
-    if(f.cols.retention){
-      const r = numCol(f.rows, f.cols.retention);
-      let [x,y] = pairwiseClean(cyc, r);
-      if(y.length && Math.max(...y) <= 1.5) y = y.map(v=>v*100);
-      return x.length ? {x,y} : null;
-    }
-    if(f.cols.discharge_capacity){
-      const cap = numCol(f.rows, f.cols.discharge_capacity);
-      const [x,capp] = pairwiseClean(cyc, cap);
-      if(!capp.length) return null;
-      const basis = capp[0] || 1;
-      const y = capp.map(v=>v/basis*100);
-      return {x,y};
-    }
-    return null;
-  }
-  if(metric === "cbc"){
-    if(f.cols.cbc_retention){
-      const r = numCol(f.rows, f.cols.cbc_retention);
-      let [x,y] = pairwiseClean(cyc, r);
-      if(y.length && Math.max(...y) <= 1.5) y = y.map(v=>v*100);
-      return x.length ? {x,y} : null;
-    }
-    if(f.cols.discharge_capacity){
-      const cap = numCol(f.rows, f.cols.discharge_capacity);
-      const [cc, capp] = pairwiseClean(cyc, cap);
-      const x=[], y=[];
-      for(let i=1;i<capp.length;i++){ x.push(cc[i]); y.push(capp[i]/capp[i-1]*100); }
-      return x.length ? {x,y} : null;
-    }
-    return null;
-  }
-  return null;
-}
-
-function renderBatch(){
-  const metricSel = ctrl("batch","metric");
-  const metric = metricSel ? metricSel.value : "retention";
-  const shape = ctrlVal("batch","shape") || "circle";
-  const series = [];
-  App.batchExportRows = [];
-
-  App.batchFiles.forEach(f=>{
-    f.warning = false;
-    if(!f.enabled) return;
-    const result = getBatchMetricSeries(f, metric);
-    if(!result){ f.warning = true; return; }
-    const [rx, ry] = decimateForRender(result.x, result.y);
-    series.push({ x:rx, y:ry, color:f.color, mode:"scatter", shape, markerSize:3, filled:true, label:f.name });
-    result.x.forEach((c,i)=>{ App.batchExportRows.push([f.name, c, Number(result.y[i].toFixed(4))]); });
-  });
-
-  // 檔案清單裡的警示標記可能因為換了比較指標而改變，重畫一次清單文字
-  const listEl = document.querySelector('#controls-batch [data-role="file-list"]');
-  if(listEl){
-    [...listEl.children].forEach((row,i)=>{
-      const f = App.batchFiles[i];
-      const span = row.querySelector("span");
-      if(f && span) span.textContent = f.name + (f.warning ? " \u26a0\ufe0f" : "");
-    });
-  }
-
-  const yAuto = ctrlVal("batch","y-auto");
-  const yDomain = yAuto ? null : [parseFloat(ctrlVal("batch","y-min")), parseFloat(ctrlVal("batch","y-max"))];
-  const metricLabels = { retention:"Retention (%)", cbc:"CbC Retention (%)", capacity:"Discharge Capacity", ce:"CE (%)" };
-
-  const svg = renderChartSVG({
-    xLabel:"Cycle number", yLabel: metricLabels[metric] || "",
-    series, yDomain, legendPos:"bottom-right", glossy: ctrlVal("batch","glossy")
-  });
-  document.getElementById("chart-batch").innerHTML = svg;
-}
-
-function initBatchTab(){
-  const dz = document.getElementById("batchDropzone");
-  const input = document.getElementById("batchFileInput");
-  dz.addEventListener("click", ()=>input.click());
-  input.addEventListener("change", (e)=>{
-    [...e.target.files].forEach(addBatchFile);
-    input.value = "";
-  });
-  ["dragenter","dragover"].forEach(evt=>dz.addEventListener(evt,(e)=>{e.preventDefault();dz.classList.add("dragover");}));
-  ["dragleave","drop"].forEach(evt=>dz.addEventListener(evt,(e)=>{e.preventDefault();dz.classList.remove("dragover");}));
-  dz.addEventListener("drop",(e)=>{ [...e.dataTransfer.files].forEach(addBatchFile); });
-
-  const panel = document.getElementById("controls-batch");
-  panel.querySelectorAll("input,select").forEach(el=>{
-    el.addEventListener("input", ()=>{ syncAxisDisabled("batch"); renderTab("batch"); });
-  });
-
-  document.querySelector('[data-download-csv="batch"]').addEventListener("click", ()=>{
-    if(!App.batchExportRows || !App.batchExportRows.length){ alert(t("alert_no_export")); return; }
-    const csv = buildCSV(["File","Cycle Index","Value"], App.batchExportRows);
-    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
-    triggerDownload(URL.createObjectURL(blob), "batch_comparison.csv");
-  });
-
-  renderBatchFileList();
-  renderTab("batch");
-}
-
-/* =========================================================
    7.6 設定匯出／匯入
    ========================================================= */
-const SETTINGS_TABS = ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist","batch","battery-info","overpotential","multicell"];
+const SETTINGS_TABS = ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist","battery-info","overpotential","multicell"];
 
 function collectSettings(){
   const tabs = {};
@@ -6411,7 +6100,6 @@ renderSheetPills();
 renderColumnsSummary();
 ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist","overpotential"].forEach(buildControlsForTab);
 renderAll();
-initBatchTab();
 function renderChangelog(){
   const el = document.getElementById("changelogList");
   if(!el) return;
@@ -6614,11 +6302,6 @@ applyLanguage("en");
       });
       return {headers:['Rate label','Start cycle','End cycle','N cycles averaged',q||'Average discharge capacity'],rows};
     }
-    if(page==='batch'){
-      const metric=field('batch','metric')||'retention',rows=[];
-      App.batchFiles.filter(f=>f.enabled).forEach(f=>{const series=getBatchMetricSeries(f,metric);if(series)series.x.forEach((x,i)=>rows.push([f.name,x,series.y[i]]));});
-      return {headers:['File','Cycle',metric],rows};
-    }
     if(page==='nyquist'){
       const c=field(page,'col-cycle'),re=field(page,'col-zre'),im=field(page,'col-zim'),f=field(page,'col-freq'),v=field(page,'col-voltage'),rows=getRows(page),out=[];
       if(c===NYQUIST_AUTO_GROUP_KEY)injectEisBlockGroups(rows,re,im);
@@ -6717,7 +6400,6 @@ applyLanguage("en");
     if(page==='overpotential')plot(0,9,[],'scatter');
     if(page==='overpotential-dvdt')plot(1,3,[0],'line',{logY:true});
     if(page==='overpotential-sensitivity')plot(1,2,[0]);
-    if(page==='batch')plot(1,2,[0],'scatter',{colors:Object.fromEntries(App.batchFiles.map(f=>[f.name,f.color]))});
     if(page==='drt')plot(6,7,[0,1,2],'line',{logX:true});
     if(page==='multicell'){
       const fields=new Map(payload.rows.map(row=>[JSON.stringify([row[4],row[5]]),[row[4],row[5]]]));
@@ -6781,37 +6463,23 @@ applyLanguage("en");
 </script>
 <script id="dataLibraryV1">
 (() => {
-  const tab = document.createElement("button");
-  tab.type = "button";
-  tab.className = "tabbtn";
-  tab.dataset.tab = "library";
-  tab.style.color = "#0E7C74";
-  tab.innerHTML = '<span class="dot"></span><span></span>';
-  document.getElementById("tabbar").prepend(tab);
-  tab.addEventListener("click", () => selectStudioTab(tab));
-
-  const panel = document.createElement("div");
-  panel.id = "panel-library";
-  panel.className = "tabpanel";
+  const panel = document.getElementById("data-library");
   panel.innerHTML = `
-    <div class="card" style="padding:20px">
       <h2 id="library-title"></h2>
       <p id="library-help"></p>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0">
+      <div class="library-controls">
         <button id="library-pick" class="btn primary" type="button"></button>
         <input id="library-folder" type="file" webkitdirectory multiple hidden>
-        <input id="library-search" type="search" style="padding:8px;max-width:100%">
+        <input id="library-search" type="search">
         <button id="library-compare" class="btn" type="button"></button>
       </div>
       <p id="library-status" role="status"></p>
-      <div id="library-list" style="display:grid;gap:6px"></div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+      <div id="library-list"></div>
+      <div class="library-pagination">
         <button id="library-prev" class="btn" type="button">‹</button>
         <span id="library-page"></span>
         <button id="library-next" class="btn" type="button">›</button>
-      </div>
-    </div>`;
-  document.getElementById("panel-gcd").before(panel);
+      </div>`;
 
   const get = id => panel.querySelector("#library-" + id);
   const input = get("folder"), search = get("search"), list = get("list");
@@ -6877,7 +6545,7 @@ applyLanguage("en");
       updateStatus(matches);
     });
     const name = document.createElement("span");
-    name.style.cssText = "flex:1;min-width:180px;overflow-wrap:anywhere";
+    name.style.cssText = "flex:1 1 90px;min-width:0;overflow-wrap:anywhere";
     name.textContent = path;
     const size = document.createElement("small");
     size.textContent = file.size < 1024 * 1024
@@ -6926,6 +6594,7 @@ applyLanguage("en");
     page = Math.min(page, pages - 1);
     updateStatus(matches.length);
     list.replaceChildren();
+    list.scrollTop = 0;
     if (!matches.length) list.textContent = w.empty;
     for (const entry of matches.slice(page * pageSize, (page + 1) * pageSize)) {
       list.append(makeRow(entry, matches.length));
@@ -6937,8 +6606,6 @@ applyLanguage("en");
 
   function localize() {
     const w = words();
-    tab.lastElementChild.textContent = w.title;
-    if (App.activeTab === "library") document.getElementById("tabMenuLabel").textContent = w.title;
     get("title").textContent = w.title;
     get("help").textContent = w.help + (hasNdax ? " " + w.ndax : "");
     get("pick").textContent = w.pick;

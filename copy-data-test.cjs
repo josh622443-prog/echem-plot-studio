@@ -15,8 +15,8 @@ const {chromium}=require('playwright');
   assert.ok(html.includes('<script id="pageDataCopyV1260">\n'+fs.readFileSync('data-copy.js','utf8')+'\n</script>'),'Embedded source must match data-copy.js');
   await page.goto('file:///'+path.resolve(`Echem_Plot_Studio_v${require('./package.json').version}.html`).replace(/\\/g,'/'));
   await page.waitForFunction(()=>window.EchemDataCopy);
-  assert.equal(await page.locator('.tabpanel > .page-data-copy').count(),14);
-  assert.equal(await page.locator('[data-copy-data]').count(),18);
+  assert.equal(await page.locator('.tabpanel > .page-data-copy').count(),13);
+  assert.equal(await page.locator('[data-copy-data]').count(),17);
   const result=await page.evaluate(()=>{
    const check=(ok,message)=>{if(!ok)throw Error(message);};
    const api=EchemDataCopy;
@@ -39,8 +39,6 @@ const {chromium}=require('playwright');
    check(api.collect('rate').rows[0][4]===5/3,'Rate precision is not rounded');
    App.tabState.cyclelife.sheet='CopyFixture';['cycle','capacity','ce'].forEach((f,i)=>select('cyclelife',['col-cycle','col-capacity','col-ce'][i],f));
    check(Number.isNaN(api.collect('cyclelife').rows[0][2]),'Missing CE is not fabricated as zero');
-   select('batch','metric','capacity');App.batchFiles=[{enabled:true,name:'fixture',cols:{cycle:'cycle',discharge_capacity:'capacity'},rows:[{cycle:1,capacity:1.23456789123}]}];
-   check(api.collect('batch').rows[0][2]===1.23456789123,'Batch precision is retained');
    App.sheets.CopyEIS={headers:['cycle','re','im','f','v','t'],rows:[{cycle:1,re:1,im:-2,f:10,v:3,t:2},{cycle:1,re:2,im:-3,f:100,v:3.1,t:1},{cycle:2,re:3,im:-4,f:1,v:3.2,t:3}]};
    App.tabState.nyquist.sheet='CopyEIS';App.tabState.nyquist.selectedCycles={1:'#123456'};
    [['col-cycle','cycle'],['col-zre','re'],['col-zim','im'],['col-freq','f'],['col-voltage','v'],['col-time','t']].forEach(([role,value])=>select('nyquist',role,value));
@@ -86,7 +84,7 @@ const {chromium}=require('playwright');
   await page.waitForFunction(()=>window.copiedTexts.length===1);
   assert.ok((await page.evaluate(()=>copiedTexts[0])).includes('\t'));
   assert.equal(await page.locator('[data-copy-format="gcd"]').inputValue(),'wide');
-  assert.equal(await page.locator('[data-origin-export]').count(),18);
+  assert.equal(await page.locator('[data-origin-export]').count(),17);
   await page.locator('#langSwitch [data-lang="zh-TW"]').evaluate(button=>button.click());
   assert.equal(await page.locator('[data-copy-data="gcd"]').innerText(),'拷貝數據');
   await page.evaluate(()=>{

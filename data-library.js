@@ -1,35 +1,21 @@
 (() => {
-  const tab = document.createElement("button");
-  tab.type = "button";
-  tab.className = "tabbtn";
-  tab.dataset.tab = "library";
-  tab.style.color = "#0E7C74";
-  tab.innerHTML = '<span class="dot"></span><span></span>';
-  document.getElementById("tabbar").prepend(tab);
-  tab.addEventListener("click", () => selectStudioTab(tab));
-
-  const panel = document.createElement("div");
-  panel.id = "panel-library";
-  panel.className = "tabpanel";
+  const panel = document.getElementById("data-library");
   panel.innerHTML = `
-    <div class="card" style="padding:20px">
       <h2 id="library-title"></h2>
       <p id="library-help"></p>
-      <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0">
+      <div class="library-controls">
         <button id="library-pick" class="btn primary" type="button"></button>
         <input id="library-folder" type="file" webkitdirectory multiple hidden>
-        <input id="library-search" type="search" style="padding:8px;max-width:100%">
+        <input id="library-search" type="search">
         <button id="library-compare" class="btn" type="button"></button>
       </div>
       <p id="library-status" role="status"></p>
-      <div id="library-list" style="display:grid;gap:6px"></div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px">
+      <div id="library-list"></div>
+      <div class="library-pagination">
         <button id="library-prev" class="btn" type="button">‹</button>
         <span id="library-page"></span>
         <button id="library-next" class="btn" type="button">›</button>
-      </div>
-    </div>`;
-  document.getElementById("panel-gcd").before(panel);
+      </div>`;
 
   const get = id => panel.querySelector("#library-" + id);
   const input = get("folder"), search = get("search"), list = get("list");
@@ -95,7 +81,7 @@
       updateStatus(matches);
     });
     const name = document.createElement("span");
-    name.style.cssText = "flex:1;min-width:180px;overflow-wrap:anywhere";
+    name.style.cssText = "flex:1 1 90px;min-width:0;overflow-wrap:anywhere";
     name.textContent = path;
     const size = document.createElement("small");
     size.textContent = file.size < 1024 * 1024
@@ -144,6 +130,7 @@
     page = Math.min(page, pages - 1);
     updateStatus(matches.length);
     list.replaceChildren();
+    list.scrollTop = 0;
     if (!matches.length) list.textContent = w.empty;
     for (const entry of matches.slice(page * pageSize, (page + 1) * pageSize)) {
       list.append(makeRow(entry, matches.length));
@@ -155,8 +142,6 @@
 
   function localize() {
     const w = words();
-    tab.lastElementChild.textContent = w.title;
-    if (App.activeTab === "library") document.getElementById("tabMenuLabel").textContent = w.title;
     get("title").textContent = w.title;
     get("help").textContent = w.help + (hasNdax ? " " + w.ndax : "");
     get("pick").textContent = w.pick;

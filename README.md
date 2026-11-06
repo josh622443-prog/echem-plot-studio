@@ -1,6 +1,8 @@
 # Echem Plot Studio
 
-**資料庫試用**。在頁籤選單開啟「資料庫」，選擇一個資料夾即可列出其子資料夾內的資料檔。搜尋檔名或路徑後，按「開啟」匯入單檔，或勾選 TXT、CSV 和 Excel 後按「比較勾選檔案」。本機啟動版也可單獨開啟 NDAX，每個檔案需要填入自己的活性物質質量。檔案在選擇開啟或比較時才讀取，重新開啟頁面後需重新選擇資料夾。
+**資料庫試用**。在圖表左側的「資料庫」選擇資料夾，即可列出子資料夾內的資料檔。切換繪圖頁籤時側欄保持可用，窄視窗會將資料庫放在圖表上方。搜尋檔名或路徑後，按「開啟」匯入單檔，或勾選 TXT、CSV 和 Excel 後按「比較勾選檔案」。本機啟動版也可單獨開啟 NDAX，每個檔案需要填入自己的活性物質質量。重新開啟頁面後需重新選擇資料夾。
+
+圖表區使用兩層選單。「循環與性能」包含 GCD、dQ/dV、循環壽命、Retention、CbC Retention、倍率性能與穩態過電位。「EIS / DRT」可切換 Nyquist / EIS 與 DRT。多檔比較集中在「多電池疊圖」。
 
 **單一 HTML 版：[下載 Browser Edition](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem_Plot_Studio_v1.26.0_Browser.html)**。將檔案儲存為 `.html` 並用瀏覽器開啟。支援 TXT、CSV、XLSX 和 XLS，以及圖表和數據拷貝。無需 Python 或本機伺服器。頁面透過網路載入瀏覽器套件，不提供 NDAX 匯入或原生 OPJU 匯出。可用 `python build_standalone_html.py` 從目前版本重新產生。
 
