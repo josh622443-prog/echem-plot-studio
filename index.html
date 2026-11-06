@@ -2924,8 +2924,9 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.26.0";
+const APP_VERSION = "1.27.0";
 const CHANGELOG = [
+  {version:"1.27.0",date:"2026-11-06",items:["Added a Data Library sidebar and grouped cycling and EIS / DRT views.","Multi-cell Excel import prefers Record and the point voltage column.","NDAX import suggests active material mass from filenames with explicit units.","Added versioned Windows, macOS and standalone HTML downloads."]},
   {version:"1.26.0",date:"2026-10-29",items:["Added native OPJU export for each page through a separate installed Origin process.","Projects contain source worksheets and basic editable graphs, with separate unit groups for custom axes and the active DRT spectrum."]},
   {version:"1.25.0",date:"2026-10-29",items:["Added Copy data to every page and diagnostic subchart, including the embedded DRT spectrum.","Copy selected-series and computed values as tab-separated data with headers and units for Excel/Origin, with manual-copy fallback when clipboard access is denied."]},
   {version:"1.24.16",date:"2026-10-29",items:["Fixed palette application freezing large charts: update selected series together and redraw once.","Preserve unchecked cycles and individual series color editing."]},

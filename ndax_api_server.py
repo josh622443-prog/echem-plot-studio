@@ -8,7 +8,7 @@ from ndax_reader import check_dependencies
 from origin_export import validate as validate_origin_payload
 
 ROOT = Path(__file__).resolve().parent
-HTML = ROOT / "Echem_Plot_Studio_v1.26.0.html"
+HTML = ROOT / "Echem_Plot_Studio_v1.27.0.html"
 READER = ROOT / 'ndax_reader.py'
 MAX_UPLOAD = 2 * 1024 * 1024 * 1024
 ORIGIN_EXPORTER = ROOT / 'origin_export.py'
@@ -50,7 +50,7 @@ class Handler(BaseHTTPRequestHandler):
                 error = None
             except ImportError as exc:
                 dependencies, ok, error = {}, False, str(exc)
-            return self._send(200 if ok else 503, json.dumps({"ok": ok, "service": "ndax-api", "version": "1.26.0", "root": str(ROOT), "reader": "newarenda-python", "dependencies": dependencies, "error": error}))
+            return self._send(200 if ok else 503, json.dumps({"ok": ok, "service": "ndax-api", "version": "1.27.0", "root": str(ROOT), "reader": "newarenda-python", "dependencies": dependencies, "error": error}))
         self._send(404, json.dumps({"error": "Not found"}))
 
     def do_POST(self):
