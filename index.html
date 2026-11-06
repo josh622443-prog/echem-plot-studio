@@ -4535,6 +4535,10 @@ function mcAddFiles(fileList){
   mcRenderChart();
 }
 
+function mcFindRecordSheet(names){
+  return names.find(name => name.trim().toLowerCase() === "record");
+}
+
 function mcParseFile(battery, file){
   const name = file.name.toLowerCase();
   if(name.endsWith(".csv")){
@@ -4564,7 +4568,8 @@ function mcParseFile(battery, file){
       parseExcelInWorker(buffer, EXACT_SHEET_NAMES_SRC, RELEVANT_SHEET_PATTERN_SRC).then(result=>{
         battery.sheetNames = result.allSheetNames;
         battery.sheets = result.sheets;
-        battery.activeSheet = Object.keys(result.sheets)[0] || result.allSheetNames[0] || null;
+        const parsedNames = Object.keys(result.sheets);
+        battery.activeSheet = mcFindRecordSheet(parsedNames) || parsedNames[0] || result.allSheetNames[0] || null;
         mcFinishBatteryLoad(battery);
       }).catch(err=>{
         console.warn("多電池疊圖背景解析失敗，退回主執行緒：", err);
@@ -4573,7 +4578,7 @@ function mcParseFile(battery, file){
             type:"array", cellText:false, cellDates:false, cellFormula:false, cellHTML:false,
             bookVBA:false, bookFiles:false, bookProps:false, dense:true,
           });
-          const sn = wb.SheetNames[0];
+          const sn = mcFindRecordSheet(wb.SheetNames) || wb.SheetNames[0];
           const ws = wb.Sheets[sn];
           const json = XLSX.utils.sheet_to_json(ws, {defval:null});
           let headers = json.length ? Object.keys(json[0]) : [];
@@ -4611,7 +4616,9 @@ function mcAutoMapBattery(battery){
   if(!sheet) return;
   const detected = autoDetectColumns(sheet.headers);
   battery.mapping.cycle = detected.cycle;
-  battery.mapping.voltage = detected.voltage;
+  const pointVoltage = sheet.headers.find(header => /^(?:voltage|電壓|电压) v$/.test(mcNorm(header)))
+    || sheet.headers.find(header => /^(?:voltage|電壓|电压)$/.test(mcNorm(header)));
+  battery.mapping.voltage = pointVoltage || detected.voltage;
   battery.mapping.capacity = detected.discharge_capacity || detected.capacity;
   // 自訂座標軸模式：全域選的是「物理量」(metric)，不是欄位名稱本身，
   // 每顆電池各自用關鍵字去找符合這個物理量的欄位（欄位名稱可以不一樣，例如 Ewe/V vs Voltage/V）
