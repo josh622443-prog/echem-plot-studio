@@ -1227,26 +1227,19 @@ function renderChartSVG(opts){
   let pw=width-margin.l-margin.r, ph=height-margin.t-margin.b;
   let px0=margin.l, py0=margin.t;
 
-  const allX=[].concat(...series.map(s=>s.x), ...series2.map(s=>s.x));
-  const allY=[].concat(...series.map(s=>s.y));
-  const allY2=hasY2 ? [].concat(...series2.map(s=>s.y)) : [];
-  if(allX.length===0) allX.push(0,1);
-  if(allY.length===0) allY.push(0,1);
-
-  const allYForDomain = yLogScale ? allY.filter(v=>v>0) : allY;
-  const yMin=yDomain?yDomain[0]:Math.min(...(allYForDomain.length?allYForDomain:[0.001])), yMax=yDomain?yDomain[1]:Math.max(...(allYForDomain.length?allYForDomain:[1]));
+  const [yMin,yMax] = yDomain || seriesExtent(series.map(s=>s.y), yLogScale);
   let xt;
   if(xCategories){
     const n = xCategories.length;
     xt = { ticks: Array.from({length:n},(_,i)=>i+1), min:0.5, max:n+0.5, step:1 };
   } else {
-    const xMin=xDomain?xDomain[0]:Math.min(...allX), xMax=xDomain?xDomain[1]:Math.max(...allX);
+    const [xMin,xMax] = xDomain || seriesExtent([...series.map(s=>s.x), ...series2.map(s=>s.x)]);
     xt = niceTicks(xMin,xMax,6);
   }
   const yt=yLogScale ? niceLogTicks(yMin, yMax) : niceTicks(yMin,yMax,6);
   let y2t=null;
   if(hasY2){
-    const y2Min=y2Domain?y2Domain[0]:Math.min(...allY2), y2Max=y2Domain?y2Domain[1]:Math.max(...allY2);
+    const [y2Min,y2Max] = y2Domain || seriesExtent(series2.map(s=>s.y));
     y2t=niceTicks(y2Min,y2Max,6);
   }
 
@@ -2938,8 +2931,9 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.2";
+const APP_VERSION = "1.27.3";
 const CHANGELOG = [
+  {version:"1.27.3",date:"2026-11-09",items:["Read standard cycle and record sheets in one workbook pass. Render inactive Excel charts on demand and group selected cycles in one pass.","Compute plot bounds without copying large series arrays."]},
   {version:"1.27.2",date:"2026-11-09",items:["Display Data Library items in Name and Date modified columns, with Back, Forward and Up navigation."]},
   {version:"1.27.1",date:"2026-11-09",items:["Browse Data Library subfolders with Up and clickable folder paths."]},
   {version:"1.27.0",date:"2026-11-06",items:["Added a Data Library sidebar and grouped cycling and EIS / DRT views.","Multi-cell Excel import prefers Record and the point voltage column.","NDAX import suggests active material mass from filenames with explicit units.","Added versioned Windows, macOS and standalone HTML downloads."]},
@@ -3161,26 +3155,26 @@ self.onmessage = function(e){
     var buf = e.data.buffer;
     var exactSrc = e.data.exactPattern || ${JSON.stringify(EXACT_SHEET_NAMES_SRC)};
     var fallbackSrc = e.data.fallbackPattern || ${JSON.stringify(RELEVANT_SHEET_PATTERN_SRC)};
-    // 第一階段：只掃描工作表名稱，非常快（不解析任何儲存格資料）
-    var quick = XLSX.read(new Uint8Array(buf), { type: "array", bookSheets: true });
-    var allNames = quick.SheetNames;
-
-    // 優先找精準符合名稱的工作表
+    var data = new Uint8Array(buf);
+    var options = {
+      type: "array", sheets: ["cycle", "record"],
+      cellText: false, cellDates: false, cellFormula: false, cellHTML: false,
+      bookVBA: false, bookFiles: false, bookProps: false, dense: true,
+    };
+    var wb = XLSX.read(data, options);
+    var allNames = wb.SheetNames;
     var exactPattern = new RegExp(exactSrc, "i");
     var relevant = allNames.filter(function(n){ return exactPattern.test(String(n).trim()); });
     if(relevant.length === 0){
-      // 沒有剛好符合名稱的工作表，退回比較寬鬆的關鍵字比對
       var pattern = new RegExp(fallbackSrc, "i");
       relevant = allNames.filter(function(n){ return pattern.test(n); });
     }
-    if(relevant.length === 0) relevant = allNames; // 還是都不符合的話，保守起見全部讀取
-
-    // 第二階段：只完整讀取上面挑出來的工作表
-    var wb = XLSX.read(new Uint8Array(buf), {
-      type: "array", sheets: relevant,
-      cellText: false, cellDates: false, cellFormula: false, cellHTML: false,
-      bookVBA: false, bookFiles: false, bookProps: false, dense: true,
-    });
+    if(relevant.length === 0) relevant = allNames;
+    // Names with extra whitespace and other layouts still use the original selection rules.
+    if(relevant.some(function(sn){ return !Object.prototype.hasOwnProperty.call(wb.Sheets, sn); })){
+      options.sheets = relevant;
+      wb = XLSX.read(data, options);
+    }
     var sheets = {};
     relevant.forEach(function(sn){
       var ws = wb.Sheets[sn];
@@ -3491,7 +3485,7 @@ function onDataLoaded(fileName){
   renderSheetPills();
   renderColumnsSummary();
   ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist","overpotential"].forEach(buildControlsForTab);
-  renderAll();
+  renderAll(/\.xlsx?$/i.test(fileName));
   updateBatteryInfoFileName();
 }
 
@@ -3537,6 +3531,7 @@ function selectStudioTab(btn){
   document.querySelectorAll(".tabbtn").forEach(button => button.classList.toggle("active", button === btn));
   document.querySelectorAll(".tabpanel").forEach(panel => panel.classList.toggle("active", panel.id === "panel-" + tab));
   App.activeTab = tab;
+  renderDeferredExcelChart(tab);
 }
 
 document.querySelectorAll(".tabbtn").forEach(btn => {
@@ -3835,11 +3830,7 @@ function buildCycleList(tab, sheetName){
     const zimCol = panel.querySelector('[data-role="col-zim"]').value;
     injectEisBlockGroups(sheet.rows, zreCol, zimCol);
   }
-  const distinct = [...new Set(
-    sheet.rows
-      .filter(r=>r[cycleCol]!==null && r[cycleCol]!==undefined && r[cycleCol]!=="")
-      .map(r=>Number(r[cycleCol]))
-  )].filter(Number.isFinite).sort((a,b)=>a-b);
+  const distinct = distinctCycles(sheet.rows, cycleCol);
 
   let selected = App.tabState[tab].selectedCycles;
   if(!selected){
@@ -4167,6 +4158,12 @@ document.getElementById("downloadAutoCombined").addEventListener("click", ()=>{
 
 let chartRenderBatchDepth = 0;
 const pendingChartRenders = new Set();
+const deferredExcelCharts = new Set();
+const standardChartTabs = ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist"];
+
+function renderDeferredExcelChart(tab){
+  if(deferredExcelCharts.has(tab)) renderTab(tab);
+}
 function withChartRenderBatch(update){
   chartRenderBatchDepth++;
   try { return update(); }
@@ -4181,6 +4178,7 @@ function withChartRenderBatch(update){
 }
 function renderTab(tab){
   if(chartRenderBatchDepth>0){pendingChartRenders.add(tab);return;}
+  deferredExcelCharts.delete(tab);
   if(tab==="gcd") return renderGCD();
   if(tab==="dqdv") return renderDqDv();
   if(tab==="cyclelife") return renderCycleLife();
@@ -4190,7 +4188,53 @@ function renderTab(tab){
   if(tab==="nyquist") return renderNyquist();
   if(tab==="overpotential") return; // 靠「執行分析」按鈕手動觸發，不用跟著其他分頁自動重算
 }
-function renderAll(){ ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist"].forEach(wireAutoRerender); ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist"].forEach(t=>{syncAxisDisabled(t); syncRangeLabels(t); renderTab(t);}); }
+function renderAll(deferHidden = false){
+  deferredExcelCharts.clear();
+  standardChartTabs.forEach(wireAutoRerender);
+  for(const tab of standardChartTabs){
+    syncAxisDisabled(tab);
+    syncRangeLabels(tab);
+    // Retention and CbC also feed the combined data summary and exports.
+    if(deferHidden && tab!==App.activeTab && tab!=="retention" && tab!=="cbc"){
+      deferredExcelCharts.add(tab);
+    } else {
+      renderTab(tab);
+    }
+  }
+}
+
+function seriesExtent(columns, positiveOnly = false){
+  let min = Infinity, max = -Infinity;
+  for(const column of columns){
+    for(const value of column){
+      if(!Number.isFinite(value) || (positiveOnly && value<=0)) continue;
+      if(value<min) min=value;
+      if(value>max) max=value;
+    }
+  }
+  return min===Infinity ? [positiveOnly ? 0.001 : 0,1] : [min,max];
+}
+
+function distinctCycles(rows, column){
+  const cycles = new Set();
+  for(const row of rows){
+    const value = row[column];
+    if(value===null || value===undefined || value==="") continue;
+    const cycle = Number(value);
+    if(Number.isFinite(cycle)) cycles.add(cycle);
+  }
+  return Array.from(cycles).sort((a,b)=>a-b);
+}
+
+function rowsBySelectedCycle(rows, column, cycles){
+  const groups = new Map(cycles.map(cycle=>[Number(cycle),[]]));
+  if(!groups.size) return groups;
+  for(const row of rows){
+    const group = groups.get(Number(row[column]));
+    if(group) group.push(row);
+  }
+  return groups;
+}
 
 function splitIntoSegments(sub, qCol, vCol, stepCol){
   // 回傳陣列，每個元素是一段不該被連在一起畫的線段 {q:[...], v:[...]}
@@ -4235,10 +4279,11 @@ function renderGCD(){
   const stepCol = ctrlVal("gcd","col-step") || null;
   const lw = parseFloat(ctrlVal("gcd","linewidth")||2);
   const selected = App.tabState.gcd.selectedCycles || {};
+  const groups = rowsBySelectedCycle(rows, cycleCol, Object.keys(selected));
 
   const series = [];
   Object.entries(selected).forEach(([cyc,color])=>{
-    const sub = rows.filter(r=>Number(r[cycleCol])===Number(cyc));
+    const sub = groups.get(Number(cyc));
     const segments = splitIntoSegments(sub, qCol, vCol, stepCol);
     segments.forEach((seg,i)=>{
       if(seg.q.length===0) return;
@@ -4264,7 +4309,7 @@ function computeDqDv(qArr, vArr, numBins, smoothWindow){
   // 把容量對電壓做分箱平均，再做差分求 dQ/dV，最後用移動平均平滑——這是業界處理雜訊數據的標準做法。
   // 直接對原始點做逐點微分雜訊會非常大，幾乎看不出相變峰值。
   if(qArr.length < 3) return {v:[], dqdv:[]};
-  let vMin = Math.min(...vArr), vMax = Math.max(...vArr);
+  const [vMin,vMax] = seriesExtent([vArr]);
   if(vMax === vMin) return {v:[], dqdv:[]};
   const binWidth = (vMax - vMin) / numBins;
   const binSumQ = new Array(numBins+1).fill(0);
@@ -4311,10 +4356,11 @@ function renderDqDv(){
   const numBins = parseInt(ctrlVal("dqdv","bins")||200, 10);
   const smoothWindow = parseInt(ctrlVal("dqdv","smooth")||5, 10);
   const selected = App.tabState.dqdv.selectedCycles || {};
+  const groups = rowsBySelectedCycle(rows, cycleCol, Object.keys(selected));
 
   const series = [];
   Object.entries(selected).forEach(([cyc,color])=>{
-    const sub = rows.filter(r=>Number(r[cycleCol])===Number(cyc));
+    const sub = groups.get(Number(cyc));
     const segments = splitIntoSegments(sub, qCol, vCol, stepCol);
     segments.forEach((seg,i)=>{
       if(seg.q.length < 3) return;
@@ -4677,12 +4723,7 @@ function mcGetRawCycles(battery){
   const sheet = mcActiveSheetObj(battery);
   if(!sheet || !battery.mapping.cycle) return [];
   const col = battery.mapping.cycle;
-  const vals = [...new Set(
-    sheet.rows
-      .filter(r=>r[col]!==null && r[col]!==undefined && r[col]!=="")
-      .map(r=>Number(r[col]))
-  )].filter(Number.isFinite);
-  return vals.sort((a,b)=>a-b);
+  return distinctCycles(sheet.rows, col);
 }
 function mcRebase(battery, rawCycle){
   if(battery.cycleOrigin===null || battery.cycleOrigin===undefined || !Number.isFinite(battery.cycleOrigin)) return rawCycle;
@@ -5220,9 +5261,10 @@ function mcRenderGcd(){
     if(!battery.enabled || !mcIsReady(battery) || !mcRequiredFieldsOk(battery)) return;
     const sheet = mcActiveSheetObj(battery);
     const sel = mcEnsureSelectedCycles(battery, bi*4);
+    const groups = rowsBySelectedCycle(sheet.rows, battery.mapping.cycle, Object.keys(sel).map(cycle=>mcUnrebase(battery, Number(cycle))));
     Object.entries(sel).forEach(([rebasedCyc,color])=>{
       const rawCyc = mcUnrebase(battery, Number(rebasedCyc));
-      const sub = sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===rawCyc);
+      const sub = groups.get(rawCyc);
       const segments = splitIntoSegments(sub, battery.mapping.capacity, battery.mapping.voltage, null);
       segments.forEach((seg,i)=>{
         if(seg.q.length===0) return;
@@ -5253,9 +5295,10 @@ function mcRenderDqdv(){
     if(!battery.enabled || !mcIsReady(battery) || !mcRequiredFieldsOk(battery)) return;
     const sheet = mcActiveSheetObj(battery);
     const sel = mcEnsureSelectedCycles(battery, bi*4);
+    const groups = rowsBySelectedCycle(sheet.rows, battery.mapping.cycle, Object.keys(sel).map(cycle=>mcUnrebase(battery, Number(cycle))));
     Object.entries(sel).forEach(([rebasedCyc,color])=>{
       const rawCyc = mcUnrebase(battery, Number(rebasedCyc));
-      const sub = sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===rawCyc);
+      const sub = groups.get(rawCyc);
       const qArr = numCol(sub, battery.mapping.capacity), vArr = numCol(sub, battery.mapping.voltage);
       const [qc, vc] = pairwiseClean(qArr, vArr);
       const { v, dqdv } = computeDqDv(qc, vc, 250, 7);
@@ -5990,6 +6033,7 @@ async function downloadAllCharts(){
     const tabs = ["gcd","dqdv","cyclelife","retention","cbc","rate","nyquist"];
     let any = false;
     for(const tab of tabs){
+      renderDeferredExcelChart(tab);
       const svgEl = document.querySelector("#chart-"+tab+" svg");
       if(!svgEl) continue;
       any = true;
