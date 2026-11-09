@@ -22,10 +22,10 @@ def main():
     version = re.search(r'const APP_VERSION = "([^"]+)";', html).group(1)
     html = replace_once(html, "<title>Echem Plot Studio</title>",
                         "<title>Echem Plot Studio · Browser Edition</title>")
-    html = replace_once(html, 'accept=".ndax,.mpr,.mpt,.csv,.txt,.xlsx,.xls"',
-                        'accept=".mpt,.csv,.txt,.xlsx,.xls"')
-    html = html.replace(".ndax / .mpr / .mpt / .csv", ".mpt / .csv")
-    html = html.replace('accept=".mpr,.mpt,.csv,.txt,.xlsx,.xls"', 'accept=".mpt,.csv,.txt,.xlsx,.xls"')
+    html = replace_once(html, 'accept=".ndax,.mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls"',
+                        'accept=".mpt,.cex,.csv,.txt,.xlsx,.xls"')
+    html = html.replace(".ndax / .mpr / .mpt / .cex / .csv", ".mpt / .cex / .csv")
+    html = html.replace('accept=".mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls"', 'accept=".mpt,.cex,.csv,.txt,.xlsx,.xls"')
     html = html.replace("upload .csv / .xlsx / .xls", "upload .csv / .txt / .xlsx / .xls")
     html = html.replace("上傳 .csv / .xlsx / .xls", "上傳 .csv / .txt / .xlsx / .xls")
     html = html.replace("上传 .csv / .xlsx / .xls", "上传 .csv / .txt / .xlsx / .xls")
@@ -38,10 +38,10 @@ def main():
     html = re.sub(r'^    (?:status_ndax_\w+|alert_ndax_\w+|instr_s2_\w+):.*\n',
                   "", html, flags=re.M)
     html = remove_section(html, '  if(name.endsWith(".ndax")){',
-                          '  } else if(/\\.mp[rt]$/.test(name)){')
-    html = replace_once(html, '  } else if(/\\.mp[rt]$/.test(name)){',
-                        '  if(/\\.mpt$/.test(name)){')
-    html = html.replace('if(/\\.mp[rt]$/.test(name)){', 'if(/\\.mpt$/.test(name)){')
+                          '  } else if(/\\.(?:mp[rt]|cex)$/.test(name)){')
+    html = replace_once(html, '  } else if(/\\.(?:mp[rt]|cex)$/.test(name)){',
+                        '  if(/\\.(?:mpt|cex)$/.test(name)){')
+    html = html.replace('if(/\\.(?:mp[rt]|cex)$/.test(name)){', 'if(/\\.(?:mpt|cex)$/.test(name)){')
     html = remove_section(html, "  async function exportOrigin(page,status){",
                           "  function addButton(container,page,prepend=false){")
     html = remove_section(html, "    const origin=document.createElement('button');",

@@ -353,8 +353,8 @@
     <div class="dropzone" id="dropzone">
       <div class="dz-icon">⇩</div>
       <div class="dz-main" data-i18n="dropzone_main">拖曳檔案到這裡，或點擊選擇</div>
-      <div class="dz-sub" data-i18n="dropzone_sub">支援 .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention</div>
-      <input type="file" id="fileInput" accept=".ndax,.mpr,.mpt,.csv,.txt,.xlsx,.xls">
+      <div class="dz-sub" data-i18n="dropzone_sub">支援 .ndax / .mpr / .mpt / .cex / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention</div>
+      <input type="file" id="fileInput" accept=".ndax,.mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls">
     </div>
     <div class="status-panel">
       <div class="status-row"><span class="label" data-i18n="status_file">檔案</span><span class="value" id="fileNameLabel" data-i18n="status_file_default">（尚未上傳，目前顯示示範數據）</span></div>
@@ -892,7 +892,7 @@
           <div class="dropzone" id="mcDropzone" style="padding:14px;">
             <div class="dz-icon" style="font-size:18px;margin-bottom:2px;">⇩</div>
             <div class="dz-main" style="font-size:12.5px;" data-i18n="mc_dropzone_main">拖曳多個檔案，或點擊選擇（自動依序建立電池卡片）</div>
-            <input type="file" id="mcFileInput" accept=".mpr,.mpt,.csv,.txt,.xlsx,.xls" multiple style="display:none">
+            <input type="file" id="mcFileInput" accept=".mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls" multiple style="display:none">
           </div>
           <button class="btn" id="mcAddEmptyBattery" type="button" style="width:100%;margin-top:8px;" data-i18n="mc_add_empty">＋ 新增空白電池</button>
           <div id="mcBatteryList" class="mc-battery-list" style="margin-top:10px;"></div>
@@ -1800,7 +1800,7 @@ const TRANSLATIONS = {
     badge_demo: "demo data · 200 cycles",
     dropzone_main: "拖曳檔案到這裡，或點擊選擇",
     dropzone_loading: "讀取中…",
-    dropzone_sub: "支援 .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention",
+    dropzone_sub: "支援 .ndax / .mpr / .mpt / .cex / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention",
     status_ndax_mass: "活性物質質量",
     status_ndax_mass_hint: "（僅 .ndax 用）",
     status_ndax_mass_prompt: "請確認此檔案的活性物質質量（g）。檔名若含 45_55mg，會建議 0.04555 g。",
@@ -2163,7 +2163,7 @@ const TRANSLATIONS = {
     badge_demo: "demo data · 200 cycles",
     dropzone_main: "拖入文件到这里，或点击选择",
     dropzone_loading: "读取中…",
-    dropzone_sub: "支持 .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · 上传后自动计算 Retention / CbC Retention",
+    dropzone_sub: "支持 .ndax / .mpr / .mpt / .cex / .csv / .txt / .xlsx / .xls · 上传后自动计算 Retention / CbC Retention",
     status_ndax_mass: "活性物质质量",
     status_ndax_mass_hint: "（仅 .ndax 用）",
     status_ndax_mass_prompt: "请确认此文件的活性物质质量（g）。文件名若含 45_55mg，会建议 0.04555 g。",
@@ -2526,7 +2526,7 @@ const TRANSLATIONS = {
     badge_demo: "demo data · 200 cycles",
     dropzone_main: "Drop a file here, or click to choose",
     dropzone_loading: "Loading…",
-    dropzone_sub: "Supports .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · Retention / CbC Retention auto-computed after upload",
+    dropzone_sub: "Supports .ndax / .mpr / .mpt / .cex / .csv / .txt / .xlsx / .xls · Retention / CbC Retention auto-computed after upload",
     status_ndax_mass: "Active material mass",
     status_ndax_mass_hint: "(.ndax only)",
     status_ndax_mass_prompt: "Confirm the active material mass in grams. For example, 45_55mg in the filename suggests 0.04555 g.",
@@ -2932,9 +2932,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.6";
+const APP_VERSION = "1.27.7";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.7",date:"2026-11-09",items:["Import the verified LAND CEX cycling profile directly."]},
   {version:"1.27.6",date:"2026-11-09",items:["Import EC-Lab MPT text and MPR binary files. MPR uses the local launcher."]},
   {version:"1.27.5",date:"2026-11-09",items:["Use English column names in the built-in demo datasets."]},
   {version:"1.27.4",date:"2026-11-09",items:["Show the current version next to the app title."]},
@@ -3375,6 +3376,100 @@ function parseTxtFile(file, onComplete, onError){
 
 /* ---- 檔案解析 ---- */
 
+async function parseLandtCexFile(file){
+  const data = new DataView(await file.arrayBuffer());
+  const u32 = offset => data.getUint32(offset, true);
+  if(data.byteLength<80 || (data.byteLength-64)%16 ||
+     u32(0)!==0x88091110 || u32(4)!==0x00040005){
+    throw new Error("Unsupported or incomplete LAND CEX layout. Export the file from LAND as Excel.");
+  }
+  // This range pair was calibrated against a matching LAND Excel export.
+  if(data.getUint16(24,true)!==0xe005 || data.getUint16(26,true)!==0xc064){
+    throw new Error("This LAND voltage/current range has not been verified. Export as Excel.");
+  }
+  const mass = data.getFloat32(28,true);
+  const hasMass = Number.isFinite(mass) && mass>0;
+  const headers = ["Cycle Index","Step Index","Step Type","Test Time (s)","Voltage (V)",
+                   "Current (A)","Capacity (mAh)","Energy (mWh)"];
+  if(hasMass) headers.push("Specific Capacity (mAh/g)");
+  const modes = {0x70:"Rest",0x76:"CC-Rate",0x75:"DC-Rate"};
+  let step = 0, mode, cycle, marker, lastTime = -1, previousCycle = 0, rateSetting = false;
+  const rows = [];
+  const unknown = offset => new Error("Unverified LAND CEX record at byte " + offset + ". Export as Excel.");
+  for(let offset=64;offset<data.byteLength;offset+=16){
+    const word = u32(offset);
+    if(word===0xffffaaaa){
+      const info = u32(offset+4);
+      const length = info>>>16;
+      const end = offset+16+length;
+      if(length%16 || end>=data.byteLength || ![0xaa,0x55,0x78,0x13].includes(info&0xffff) ||
+         u32(end)!==0xffffbbbb || u32(end+4)!==info ||
+         u32(end+8)!==u32(offset+8) || u32(end+12)!==u32(offset+12)) throw unknown(offset);
+      offset = end;
+      continue;
+    }
+    if(word===0xffffcccc || word===0xffffcccd){
+      const tag = u32(offset+4), payload = u32(offset+8), tail = u32(offset+12);
+      switch(tag&0xffff){
+        case 0x44: {
+          if(marker || payload>1) throw unknown(offset);
+          marker = {cycle:(tail>>>16)+1, instrumentStep:tail&0x7fff, discharge:payload===1};
+          break;
+        }
+        case 0x22: {
+          const code = payload&255;
+          const instrumentStep = (tag>>>16)&0x7fff;
+          if(!modes[code] || (step && mode!=="Rest" && !rateSetting)) throw unknown(offset);
+          if(marker){
+            if(marker.instrumentStep!==instrumentStep || marker.discharge!==(code===0x75) ||
+               marker.cycle<previousCycle || marker.cycle>previousCycle+1) throw unknown(offset);
+            cycle = marker.cycle;
+            previousCycle = cycle;
+            marker = null;
+          }else if(!cycle || code!==0x76 || mode!=="Rest") throw unknown(offset);
+          mode = modes[code];
+          rateSetting = false;
+          step++;
+          break;
+        }
+        case 0x23:
+          if(rateSetting || (mode==="CC-Rate" ? payload!==0x02047603 :
+                             mode==="DC-Rate" ? payload!==0x02047502 : true)) throw unknown(offset);
+          rateSetting = true;
+          break;
+        case 0x33:
+          if(![0x0201,0x1013,0x0101].includes(payload&0xffff)) throw unknown(offset);
+          break;
+        case 0x88: case 0xb1: case 0xb2: break;
+        default: throw unknown(offset);
+      }
+      continue;
+    }
+    const capacity = data.getFloat32(offset+8,true)*1000;
+    const energy = data.getFloat32(offset+12,true)*1000;
+    const voltageCounts = data.getInt16(offset+4,true);
+    const currentCounts = data.getInt16(offset+6,true);
+    if(word>=0xffff0000 || word<lastTime || marker || !step ||
+       (mode!=="Rest" && !rateSetting) ||
+       !Number.isFinite(capacity) || capacity<0 || !Number.isFinite(energy) || energy<0 ||
+       voltageCounts===-32768 || voltageCounts===32767 || currentCounts===-32768 || currentCounts===32767){
+      throw unknown(offset);
+    }
+    lastTime = word;
+    const row = {
+      "Cycle Index":cycle, "Step Index":step, "Step Type":mode, "Test Time (s)":word/100,
+      "Voltage (V)":voltageCounts*5/32256, "Current (A)":currentCounts*10/32256,
+      "Capacity (mAh)":capacity, "Energy (mWh)":energy,
+    };
+    if(hasMass) row["Specific Capacity (mAh/g)"] = capacity/mass;
+    rows.push(row);
+  }
+  if(!rows.length || marker || (mode!=="Rest" && !rateSetting)){
+    throw new Error("LAND CEX ended without a complete measurement record.");
+  }
+  return {headers, rows};
+}
+
 async function parseECLabFile(file){
   if(/\.mpr$/i.test(file.name)){
     if(!/^https?:$/.test(location.protocol) || !["127.0.0.1","localhost"].includes(location.hostname)){
@@ -3468,9 +3563,9 @@ async function handleFiles(file, confirmedMass){
       setLoading(false);
       alert(t("alert_ndax_fail")+err.message+"\n\n"+t("alert_ndax_fail_hint"));
     }
-  } else if(/\.mp[rt]$/.test(name)){
+  } else if(/\.(?:mp[rt]|cex)$/.test(name)){
     try{
-      const parsed = await parseECLabFile(file);
+      const parsed = await (/\.cex$/.test(name) ? parseLandtCexFile(file) : parseECLabFile(file));
       App.workbook = null;
       App.excelBuffer = null;
       App.sheetNames = [file.name];
@@ -3478,7 +3573,7 @@ async function handleFiles(file, confirmedMass){
       App.lastTextParseInfo = null;
       onDataLoaded(file.name);
     }catch(err){
-      alert("EC-Lab import failed: " + err.message);
+      alert("Instrument file import failed: " + err.message);
     }finally{
       setLoading(false);
     }
@@ -4696,15 +4791,16 @@ function mcFindRecordSheet(names){
 
 function mcParseFile(battery, file){
   const name = file.name.toLowerCase();
-  if(/\.mp[rt]$/.test(name)){
-    parseECLabFile(file).then(parsed=>{
+  if(/\.(?:mp[rt]|cex)$/.test(name)){
+    const reading = /\.cex$/.test(name) ? parseLandtCexFile(file) : parseECLabFile(file);
+    reading.then(parsed=>{
       battery.sheetNames = [file.name];
       battery.sheets = { [file.name]: parsed };
       battery.activeSheet = file.name;
       mcFinishBatteryLoad(battery);
     }).catch(err=>{
       battery.status = "failed";
-      battery.error = "EC-Lab import failed: " + err.message;
+      battery.error = "Instrument file import failed: " + err.message;
       mcRenderBatteryList();
     });
   } else if(name.endsWith(".csv")){
@@ -5116,7 +5212,7 @@ function mcBatteryCardHtml(battery, index){
   html += `<div class="mc-battery-body">`;
   html += `<div class="ctrl-row"><label>${esc(t("mc_battery_name"))}</label><input type="text" data-mcaction="name" value="${esc(battery.name)}"></div>`;
   html += `<div class="ctrl-row"><label></label><div style="display:flex;gap:6px;width:100%;">
-    <label class="btn small" style="flex:1;text-align:center;cursor:pointer;">${esc(t("mc_upload_replace"))}<input type="file" data-mcaction="file" accept=".mpr,.mpt,.csv,.txt,.xlsx,.xls" style="display:none"></label>
+    <label class="btn small" style="flex:1;text-align:center;cursor:pointer;">${esc(t("mc_upload_replace"))}<input type="file" data-mcaction="file" accept=".mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls" style="display:none"></label>
     <button class="btn small" type="button" data-mcaction="remove">${esc(t("mc_remove"))}</button>
   </div></div>`;
   if(battery.error) html += `<p class="mc-file-error">${esc(battery.error)}</p>`;
@@ -6607,7 +6703,7 @@ applyLanguage("en");
   const massInput = document.getElementById("ndaxMassG");
   const hasNdax = Boolean(massInput && /^https?:$/.test(location.protocol)
     && ["127.0.0.1", "localhost"].includes(location.hostname));
-  const supported = hasNdax ? /\.(csv|txt|mpt|mpr|xlsx?|ndax)$/i : /\.(csv|txt|mpt|xlsx?)$/i;
+  const supported = hasNdax ? /\.(csv|txt|mpt|mpr|cex|xlsx?|ndax)$/i : /\.(csv|txt|mpt|cex|xlsx?)$/i;
   const labels = {
     en: {
       title: "Data Library", pick: "Choose / refresh folder", search: "Search file or folder",
