@@ -10,11 +10,18 @@
         <button id="library-compare" class="btn" type="button"></button>
       </div>
       <nav id="library-location" hidden>
-        <button id="library-up" class="btn" type="button"></button>
+        <div class="library-navigation">
+          <button id="library-back" class="btn" type="button">←</button>
+          <button id="library-forward" class="btn" type="button">→</button>
+          <button id="library-up" class="btn" type="button">↑</button>
+        </div>
         <div id="library-path"></div>
       </nav>
       <p id="library-status" role="status"></p>
-      <div id="library-list"></div>
+      <div id="library-list">
+        <div class="library-details library-head"><span id="library-name"></span><span id="library-modified"></span></div>
+        <div id="library-rows"></div>
+      </div>
       <div class="library-pagination">
         <button id="library-prev" class="btn" type="button">‹</button>
         <span id="library-page"></span>
@@ -23,6 +30,7 @@
 
   const get = id => panel.querySelector("#library-" + id);
   const input = get("folder"), search = get("search"), list = get("list");
+  const rowList = get("rows"), back = get("back"), forward = get("forward");
   const compare = get("compare"), prev = get("prev"), next = get("next");
   const up = get("up"), locationNav = get("location"), breadcrumb = get("path");
   const massInput = document.getElementById("ndaxMassG");
@@ -33,7 +41,8 @@
     en: {
       title: "Data Library", pick: "Choose / refresh folder", search: "Search file or folder",
       compare: "Compare selected", open: "Open", select: "Select", prev: "Previous page", next: "Next page",
-      up: "↑ Up one folder", location: "Folder path", root: "Selected folder",
+      up: "Up one folder", back: "Back", forward: "Forward", name: "Name", modified: "Date modified",
+      location: "Folder path", root: "Selected folder",
       help: "Choose your experiment folder. Files are read when opened or compared. Choose the folder again after reopening this page.",
       ndax: "NDAX opens individually. Set the active material mass in grams.",
       mass: "Active material mass (g)", busy: "A file is already loading.",
@@ -42,7 +51,8 @@
     "zh-TW": {
       title: "資料庫", pick: "選擇／重新掃描資料夾", search: "搜尋檔名或資料夾",
       compare: "比較勾選檔案", open: "開啟", select: "勾選", prev: "上一頁", next: "下一頁",
-      up: "↑ 上一層", location: "資料夾路徑", root: "所選資料夾",
+      up: "上一層", back: "返回", forward: "前進", name: "名稱", modified: "修改時間",
+      location: "資料夾路徑", root: "所選資料夾",
       help: "選擇實驗資料夾。只有開啟或比較時才讀取檔案。重新開啟網頁後請再選一次資料夾。",
       ndax: "NDAX 支援單檔開啟，請輸入該檔案的活性物質質量（g）。",
       mass: "活性物質質量（g）", busy: "正在讀取另一個檔案。",
@@ -51,7 +61,8 @@
     "zh-CN": {
       title: "数据库", pick: "选择／重新扫描文件夹", search: "搜索文件名或文件夹",
       compare: "比较勾选文件", open: "打开", select: "勾选", prev: "上一页", next: "下一页",
-      up: "↑ 上一级", location: "文件夹路径", root: "所选文件夹",
+      up: "上一级", back: "返回", forward: "前进", name: "名称", modified: "修改时间",
+      location: "文件夹路径", root: "所选文件夹",
       help: "选择实验文件夹。只有打开或比较时才读取文件。重新打开网页后请再选一次文件夹。",
       ndax: "NDAX 支持单文件打开，请输入该文件的活性物质质量（g）。",
       mass: "活性物质质量（g）", busy: "正在读取另一个文件。",
@@ -62,6 +73,8 @@
   const selected = new Set();
   const pageSize = 100;
   let entries = [], page = 0, root = null, currentFolder;
+  let folderHistory = [], historyIndex = -1;
+  let dateFormat;
 
   function showTab(name) {
     document.querySelector(`.tabbtn[data-tab="${name}"]`).click();
@@ -76,7 +89,7 @@
     const {file, path, ndax} = entry;
     const w = words();
     const row = document.createElement("div");
-    row.style.cssText = "display:flex;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid var(--line);padding:8px 0";
+    row.className = "library-details library-entry";
     const check = document.createElement("input");
     check.type = "checkbox";
     check.hidden = ndax;
@@ -88,19 +101,24 @@
       else selected.delete(entry);
       updateStatus(matches);
     });
-    const name = document.createElement("span");
-    name.style.cssText = "flex:1 1 90px;min-width:0;overflow-wrap:anywhere";
-    name.textContent = showPath ? path : file.name;
-    name.title = path;
-    const size = document.createElement("small");
-    size.textContent = file.size < 1024 * 1024
-      ? `${Math.ceil(file.size / 1024)} KB` : `${(file.size / (1024 * 1024)).toFixed(1)} MB`;
+    const nameCell = document.createElement("div");
+    nameCell.className = "library-entry-name";
     const open = document.createElement("button");
     open.type = "button";
-    open.className = "btn";
-    open.textContent = w.open;
+    open.className = "library-name-button";
+    open.textContent = "📄 " + (showPath ? path : file.name);
+    open.title = path;
     open.setAttribute("aria-label", w.open + " " + path);
-    row.append(check, name, size);
+    nameCell.append(check, open);
+    const modified = document.createElement("time");
+    if (file.lastModified > 0) {
+      const date = new Date(file.lastModified);
+      modified.dateTime = date.toISOString();
+      modified.textContent = dateFormat.format(date);
+    } else {
+      modified.textContent = "—";
+    }
+    row.append(nameCell, modified);
     let mass;
     if (ndax) {
       mass = document.createElement("input");
@@ -126,12 +144,20 @@
       showTab("gcd");
       handleFiles(file, mass?.value);
     });
-    row.append(open);
     return row;
   }
 
   function goToFolder(folder) {
-    currentFolder = folder;
+    if (currentFolder === folder) return;
+    folderHistory = folderHistory.slice(0, historyIndex + 1);
+    folderHistory.push(folder);
+    showFolderAt(folderHistory.length - 1);
+  }
+
+  function showFolderAt(index) {
+    if (!folderHistory[index]) return;
+    historyIndex = index;
+    currentFolder = folderHistory[index];
     search.value = "";
     page = 0;
     render();
@@ -141,6 +167,8 @@
     locationNav.hidden = !root;
     if (!root) return;
     up.disabled = currentFolder === root;
+    back.disabled = historyIndex === 0;
+    forward.disabled = historyIndex === folderHistory.length - 1;
     const ancestors = [];
     for (let folder = currentFolder; folder; folder = folder.parent) ancestors.unshift(folder);
     breadcrumb.replaceChildren();
@@ -162,12 +190,17 @@
   }
 
   function makeFolderRow(folder) {
+    const row = document.createElement("div");
+    row.className = "library-details library-entry";
     const button = document.createElement("button");
-    button.className = "btn library-folder-row";
+    button.className = "library-name-button library-folder-row";
     button.type = "button";
     button.textContent = "📁 " + folder.name;
     button.addEventListener("click", () => goToFolder(folder));
-    return button;
+    const modified = document.createElement("span");
+    modified.textContent = "—";
+    row.append(button, modified);
+    return row;
   }
 
   function render() {
@@ -179,12 +212,12 @@
     const pages = Math.max(1, Math.ceil(rows.length / pageSize));
     page = Math.min(page, pages - 1);
     updateStatus(matches.length);
-    list.replaceChildren();
+    rowList.replaceChildren();
     list.scrollTop = 0;
     renderLocation();
-    if (!rows.length) list.textContent = w.empty;
+    if (!rows.length) rowList.textContent = w.empty;
     for (const item of rows.slice(page * pageSize, (page + 1) * pageSize)) {
-      list.append(item.file ? makeRow(item, matches.length, Boolean(query)) : makeFolderRow(item));
+      rowList.append(item.file ? makeRow(item, matches.length, Boolean(query)) : makeFolderRow(item));
     }
     get("page").textContent = `${page + 1} / ${pages}`;
     prev.disabled = page === 0;
@@ -196,7 +229,13 @@
     get("title").textContent = w.title;
     get("help").textContent = w.help + (hasNdax ? " " + w.ndax : "");
     get("pick").textContent = w.pick;
-    up.textContent = w.up;
+    dateFormat = new Intl.DateTimeFormat(App.lang, {dateStyle: "short", timeStyle: "short"});
+    for (const [button, label] of [[up, w.up], [back, w.back], [forward, w.forward]]) {
+      button.title = label;
+      button.setAttribute("aria-label", label);
+    }
+    get("name").textContent = w.name;
+    get("modified").textContent = w.modified;
     locationNav.setAttribute("aria-label", w.location);
     compare.textContent = w.compare;
     search.placeholder = w.search;
@@ -208,6 +247,8 @@
 
   get("pick").addEventListener("click", () => input.click());
   up.addEventListener("click", () => { if (currentFolder?.parent) goToFolder(currentFolder.parent); });
+  back.addEventListener("click", () => showFolderAt(historyIndex - 1));
+  forward.addEventListener("click", () => showFolderAt(historyIndex + 1));
   input.addEventListener("change", () => {
     root = {name: "", children: new Map(), files: [], parent: null};
     entries = [];
@@ -233,7 +274,8 @@
     }
     input.value = "";
     selected.clear();
-    goToFolder(root);
+    folderHistory = [root];
+    showFolderAt(0);
   });
   search.addEventListener("input", () => { page = 0; render(); });
   prev.addEventListener("click", () => { page -= 1; render(); });

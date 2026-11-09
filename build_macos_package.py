@@ -3,7 +3,7 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "1.27.1"
+VERSION = "1.27.2"
 HTML = f"Echem_Plot_Studio_v{VERSION}.html"
 LAUNCHER = "Start Echem Plot Studio.command"
 FILES = (
