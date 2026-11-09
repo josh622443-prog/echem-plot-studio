@@ -1,4 +1,4 @@
-Echem Plot Studio v1.27.3 for macOS
+Echem Plot Studio v1.27.4 for macOS
 
 1. Extract the ZIP to a writable folder.
 2. For TXT, CSV and Excel, open index.html in your browser.

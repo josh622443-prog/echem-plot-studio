@@ -1,10 +1,10 @@
-ECHEM PLOT STUDIO v1.27.3 - PYTHON NDAX ADD-ON
+ECHEM PLOT STUDIO v1.27.4 - PYTHON NDAX ADD-ON
 ================================================
 
 Start
 -----
 Recommended Windows runtime ZIP (current files only):
-https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.3-Windows.zip
+https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.4-Windows.zip
 The v1.24.7 GitHub Release and /tree/300da08... snapshots are older than the
 2026-11-02 Windows startup fix. Use the current download or main branch.
 
@@ -13,7 +13,7 @@ https://github.com/josh622443-prog/echem-plot-studio/tree/main
 Use Code > Download ZIP, then extract the entire ZIP before starting.
 Historical Echem_Plot_Studio_v*.html and baseline*.html files are retained in
 the source repository. They are not separate installations. The launcher opens
-the current v1.27.3 automatically; index.html is its identical current entry.
+the current v1.27.4 automatically; index.html is its identical current entry.
 Do not mix launcher/server files from different snapshots.
 
 Double-click "Start Echem Plot Studio.cmd" and use the page it opens at

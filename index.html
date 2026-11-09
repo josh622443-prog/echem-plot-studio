@@ -72,6 +72,7 @@
   .app-header{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
   .app-title{font-family:var(--font-display);font-weight:700;font-size:26px;letter-spacing:-0.01em;margin:0;}
   .app-title .accent{color:var(--copper);}
+  .app-title .app-version{font-size:.55em;font-weight:500;color:var(--muted);white-space:nowrap;}
   .app-subtitle{margin:4px 0 0;color:var(--muted);font-size:13px;}
   .badge{
     font-family:var(--font-mono);font-size:11px;color:var(--muted);
@@ -335,7 +336,7 @@
 
   <div class="app-header">
     <div>
-      <h1 class="app-title">Echem Plot <span class="accent">Studio</span></h1>
+      <h1 class="app-title">Echem Plot <span class="accent">Studio</span> <span class="app-version" id="appTitleVersion"></span></h1>
       <p class="app-subtitle" data-i18n="brand_subtitle">拖曳你的 CSV / Excel 電化學數據，產生 Origin 風格圖表，並即時微調樣式</p>
     </div>
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -2931,8 +2932,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.3";
+const APP_VERSION = "1.27.4";
+document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.4",date:"2026-11-09",items:["Show the current version next to the app title."]},
   {version:"1.27.3",date:"2026-11-09",items:["Read standard cycle and record sheets in one workbook pass. Render inactive Excel charts on demand and group selected cycles in one pass.","Compute plot bounds without copying large series arrays."]},
   {version:"1.27.2",date:"2026-11-09",items:["Display Data Library items in Name and Date modified columns, with Back, Forward and Up navigation."]},
   {version:"1.27.1",date:"2026-11-09",items:["Browse Data Library subfolders with Up and clickable folder paths."]},
