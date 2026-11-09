@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1692,7 +1692,7 @@ function makeDemoSheets(){
   const capacity = cycle.map(c=>180*Math.exp(-c/800)+gauss());
   const ce = cycle.map(c=>Math.min(100.4, 100-15*Math.exp(-c/5)+gauss()*0.15));
   const summaryRows = cycle.map((c,i)=>({
-    "循环序号": c, "放电比容量(mAh/g)": Number(capacity[i].toFixed(3)), "库伦效率(%)": Number(ce[i].toFixed(3))
+    "Cycle Index": c, "Discharge Specific Capacity (mAh/g)": Number(capacity[i].toFixed(3)), "Coulombic Efficiency (%)": Number(ce[i].toFixed(3))
   }));
 
   // GCD 逐點示範（4圈）
@@ -1712,7 +1712,7 @@ function makeDemoSheets(){
   const gcdCycleMap = {1:200, 2:195, 50:180, 100:170};
   const gcdRows=[];
   Object.entries(gcdCycleMap).forEach(([cyc,qmax])=>{
-    curve(qmax).forEach(pt=>gcdRows.push({"循环序号":Number(cyc), "电压/V":Number(pt.v.toFixed(4)), "比容量(mAh/g)":Number(pt.q.toFixed(3))}));
+    curve(qmax).forEach(pt=>gcdRows.push({"Cycle Index":Number(cyc), "Voltage (V)":Number(pt.v.toFixed(4)), "Specific Capacity (mAh/g)":Number(pt.q.toFixed(3))}));
   });
 
   // EIS 逐點示範（用簡單的 Rs + Rct//C 電路模型模擬半圓，並模擬阻抗隨循環增加變大的常見現象）
@@ -1730,7 +1730,7 @@ function makeDemoSheets(){
   Object.entries(eisCycleParams).forEach(([cyc,p])=>{
     simulateEIS(p.Rs, p.Rct, p.C, eisFreqs).forEach((pt,i)=>{
       eisRows.push({
-        "循环序号": Number(cyc),
+        "Cycle Index": Number(cyc),
         "Frequency(Hz)": Number(pt.f.toFixed(4)),
         "Z'(Ω)": Number(pt.zre.toFixed(4)),
         "Z''(Ω)": Number(pt.zim.toFixed(4)),
@@ -1743,7 +1743,7 @@ function makeDemoSheets(){
   for(let i=0;i<=300;i++){
     const t = i/300*52000;
     const v = 2.8 + (4.2-2.8)*Math.pow(i/300, 0.6);
-    eisRows.push({ "循环序号": null, "Frequency(Hz)": null, "Z'(Ω)": null, "Z''(Ω)": null, "Time(s)": Number(t.toFixed(1)), "Ewe/V": Number(v.toFixed(4)) });
+    eisRows.push({ "Cycle Index": null, "Frequency(Hz)": null, "Z'(Ω)": null, "Z''(Ω)": null, "Time(s)": Number(t.toFixed(1)), "Ewe/V": Number(v.toFixed(4)) });
   }
 
   // GCPL 對稱電池示範資料：正負電流交替，模擬穩態過電位分析用；
@@ -1784,9 +1784,9 @@ function makeDemoSheets(){
   }
 
   return {
-    "Cycle Summary (demo)": { headers:["循环序号","放电比容量(mAh/g)","库伦效率(%)"], rows:summaryRows },
-    "GCD Detail (demo)": { headers:["循环序号","电压/V","比容量(mAh/g)"], rows:gcdRows },
-    "EIS Demo": { headers:["循环序号","Frequency(Hz)","Z'(Ω)","Z''(Ω)","Time(s)","Ewe/V"], rows:eisRows },
+    "Cycle Summary (demo)": { headers:["Cycle Index","Discharge Specific Capacity (mAh/g)","Coulombic Efficiency (%)"], rows:summaryRows },
+    "GCD Detail (demo)": { headers:["Cycle Index","Voltage (V)","Specific Capacity (mAh/g)"], rows:gcdRows },
+    "EIS Demo": { headers:["Cycle Index","Frequency(Hz)","Z'(Ω)","Z''(Ω)","Time(s)","Ewe/V"], rows:eisRows },
     "GCPL Symmetric Demo": { headers:["time/s","I/mA","Ewe/V","cycle number"], rows:gcplRows },
   };
 }
@@ -2932,9 +2932,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.4";
+const APP_VERSION = "1.27.5";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.5",date:"2026-11-09",items:["Use English column names in the built-in demo datasets."]},
   {version:"1.27.4",date:"2026-11-09",items:["Show the current version next to the app title."]},
   {version:"1.27.3",date:"2026-11-09",items:["Read standard cycle and record sheets in one workbook pass. Render inactive Excel charts on demand and group selected cycles in one pass.","Compute plot bounds without copying large series arrays."]},
   {version:"1.27.2",date:"2026-11-09",items:["Display Data Library items in Name and Date modified columns, with Back, Forward and Up navigation."]},
