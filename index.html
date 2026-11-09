@@ -353,8 +353,8 @@
     <div class="dropzone" id="dropzone">
       <div class="dz-icon">⇩</div>
       <div class="dz-main" data-i18n="dropzone_main">拖曳檔案到這裡，或點擊選擇</div>
-      <div class="dz-sub" data-i18n="dropzone_sub">支援 .ndax / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention</div>
-      <input type="file" id="fileInput" accept=".ndax,.csv,.txt,.xlsx,.xls">
+      <div class="dz-sub" data-i18n="dropzone_sub">支援 .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention</div>
+      <input type="file" id="fileInput" accept=".ndax,.mpr,.mpt,.csv,.txt,.xlsx,.xls">
     </div>
     <div class="status-panel">
       <div class="status-row"><span class="label" data-i18n="status_file">檔案</span><span class="value" id="fileNameLabel" data-i18n="status_file_default">（尚未上傳，目前顯示示範數據）</span></div>
@@ -892,7 +892,7 @@
           <div class="dropzone" id="mcDropzone" style="padding:14px;">
             <div class="dz-icon" style="font-size:18px;margin-bottom:2px;">⇩</div>
             <div class="dz-main" style="font-size:12.5px;" data-i18n="mc_dropzone_main">拖曳多個檔案，或點擊選擇（自動依序建立電池卡片）</div>
-            <input type="file" id="mcFileInput" accept=".csv,.txt,.xlsx,.xls" multiple style="display:none">
+            <input type="file" id="mcFileInput" accept=".mpr,.mpt,.csv,.txt,.xlsx,.xls" multiple style="display:none">
           </div>
           <button class="btn" id="mcAddEmptyBattery" type="button" style="width:100%;margin-top:8px;" data-i18n="mc_add_empty">＋ 新增空白電池</button>
           <div id="mcBatteryList" class="mc-battery-list" style="margin-top:10px;"></div>
@@ -1399,8 +1399,8 @@ const FIELD_KEYWORDS = {
   voltage:["voltage/v","voltage","电压","volt","ewe"],
   time:["test time","total time","time/s","time"],
   current:["current/ma","current/a","current","i/ma","i/a","电流"],
-  charge_capacity:["charge specific capacity","charge capacity","charge_capacity","充电容量","充电比容量","chg spec cap","chg cap"],
-  discharge_capacity:["discharge specific capacity","discharge capacity","discharge_capacity","放电容量","放电比容量","dchg spec cap","dchg cap"],
+  charge_capacity:["charge specific capacity","charge capacity","charge_capacity","q charge/ma h","充电容量","充电比容量","chg spec cap","chg cap"],
+  discharge_capacity:["discharge specific capacity","discharge capacity","discharge_capacity","q discharge/ma h","放电容量","放电比容量","dchg spec cap","dchg cap"],
   specific_capacity:["specific capacity","capacity(mah/g)","capacity (mah/g)","比容量","spec cap"],
   capacity:["capacity","容量"],
   ce:["coulombic efficiency","efficiency","库伦效率","效率","ce(%)","ce (%)","chg dchg eff","chg-dchg eff"],
@@ -1800,7 +1800,7 @@ const TRANSLATIONS = {
     badge_demo: "demo data · 200 cycles",
     dropzone_main: "拖曳檔案到這裡，或點擊選擇",
     dropzone_loading: "讀取中…",
-    dropzone_sub: "支援 .ndax / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention",
+    dropzone_sub: "支援 .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · 上傳後自動計算 Retention / CbC Retention",
     status_ndax_mass: "活性物質質量",
     status_ndax_mass_hint: "（僅 .ndax 用）",
     status_ndax_mass_prompt: "請確認此檔案的活性物質質量（g）。檔名若含 45_55mg，會建議 0.04555 g。",
@@ -2154,7 +2154,7 @@ const TRANSLATIONS = {
     alert_ndax_fail: "NDAX 匯入失敗：",
     alert_ndax_fail_hint: "請確認是用「Start Echem Plot Studio.cmd」開啟這個頁面（本機解析伺服器要一直開著），而不是直接雙擊 HTML 檔案。",
     alert_file_fail: "讀取檔案失敗，請確認檔案沒有損壞。",
-    alert_unsupported: "不支援的檔案格式，請上傳 .csv / .xlsx / .xls",
+    alert_unsupported: "不支援的檔案格式，請上傳 .mpt / .csv / .txt / .xlsx / .xls（.mpr 請用本機啟動版）",
     alert_no_export: "目前沒有可匯出的數據，請先確認欄位是否選對。",
     alert_no_export2: "目前沒有可匯出的數據，請先確認 Retention / CbC Retention 分頁的欄位是否選對。",
   },
@@ -2163,7 +2163,7 @@ const TRANSLATIONS = {
     badge_demo: "demo data · 200 cycles",
     dropzone_main: "拖入文件到这里，或点击选择",
     dropzone_loading: "读取中…",
-    dropzone_sub: "支持 .ndax / .csv / .txt / .xlsx / .xls · 上传后自动计算 Retention / CbC Retention",
+    dropzone_sub: "支持 .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · 上传后自动计算 Retention / CbC Retention",
     status_ndax_mass: "活性物质质量",
     status_ndax_mass_hint: "（仅 .ndax 用）",
     status_ndax_mass_prompt: "请确认此文件的活性物质质量（g）。文件名若含 45_55mg，会建议 0.04555 g。",
@@ -2517,7 +2517,7 @@ const TRANSLATIONS = {
     alert_ndax_fail: "NDAX 导入失败：",
     alert_ndax_fail_hint: "请确认是用「Start Echem Plot Studio.cmd」打开这个页面（本地解析服务器要一直开着），而不是直接双击 HTML 文件。",
     alert_file_fail: "读取文件失败，请确认文件没有损坏。",
-    alert_unsupported: "不支持的文件格式，请上传 .csv / .xlsx / .xls",
+    alert_unsupported: "不支持的文件格式，请上传 .mpt / .csv / .txt / .xlsx / .xls（.mpr 请用本机启动版）",
     alert_no_export: "当前没有可导出的数据，请先确认字段是否选对。",
     alert_no_export2: "当前没有可导出的数据，请先确认 Retention / CbC Retention 分页的字段是否选对。",
   },
@@ -2526,7 +2526,7 @@ const TRANSLATIONS = {
     badge_demo: "demo data · 200 cycles",
     dropzone_main: "Drop a file here, or click to choose",
     dropzone_loading: "Loading…",
-    dropzone_sub: "Supports .ndax / .csv / .txt / .xlsx / .xls · Retention / CbC Retention auto-computed after upload",
+    dropzone_sub: "Supports .ndax / .mpr / .mpt / .csv / .txt / .xlsx / .xls · Retention / CbC Retention auto-computed after upload",
     status_ndax_mass: "Active material mass",
     status_ndax_mass_hint: "(.ndax only)",
     status_ndax_mass_prompt: "Confirm the active material mass in grams. For example, 45_55mg in the filename suggests 0.04555 g.",
@@ -2880,7 +2880,7 @@ const TRANSLATIONS = {
     alert_ndax_fail: "NDAX import failed: ",
     alert_ndax_fail_hint: "Make sure you opened this page via \"Start Echem Plot Studio.cmd\" (the local parsing server needs to stay running), not by double-clicking the HTML file directly.",
     alert_file_fail: "Failed to read the file. Please check it isn't corrupted.",
-    alert_unsupported: "Unsupported file type. Please upload .csv / .xlsx / .xls",
+    alert_unsupported: "Unsupported file type. Choose .mpt / .csv / .txt / .xlsx / .xls, or .mpr with the local launcher",
     alert_no_export: "Nothing to export yet — please check the column selections.",
     alert_no_export2: "Nothing to export yet — please check the column selections on the Retention / CbC Retention tabs.",
   },
@@ -2932,9 +2932,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.5";
+const APP_VERSION = "1.27.6";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.6",date:"2026-11-09",items:["Import EC-Lab MPT text and MPR binary files. MPR uses the local launcher."]},
   {version:"1.27.5",date:"2026-11-09",items:["Use English column names in the built-in demo datasets."]},
   {version:"1.27.4",date:"2026-11-09",items:["Show the current version next to the app title."]},
   {version:"1.27.3",date:"2026-11-09",items:["Read standard cycle and record sheets in one workbook pass. Render inactive Excel charts on demand and group selected cycles in one pass.","Compute plot bounds without copying large series arrays."]},
@@ -3261,7 +3262,7 @@ function txtDynamicValue(v){
 }
 
 function txtMakeUniqueHeaders(headers){
-  const seen={};
+  const seen=Object.create(null);
   return headers.map((h,i)=>{
     let base=String(h??"").trim().replace(/^\uFEFF/,"");
     if(!base) base=`Column_${i+1}`;
@@ -3373,6 +3374,52 @@ function parseTxtFile(file, onComplete, onError){
 }
 
 /* ---- 檔案解析 ---- */
+
+async function parseECLabFile(file){
+  if(/\.mpr$/i.test(file.name)){
+    if(!/^https?:$/.test(location.protocol) || !["127.0.0.1","localhost"].includes(location.hostname)){
+      throw new Error("Open Echem Plot Studio with its local launcher to read .mpr files.");
+    }
+    const response = await fetch("/api/mpr", {
+      method:"POST", headers:{"Content-Type":"application/octet-stream"}, body:file,
+    });
+    const result = await response.json();
+    if(!response.ok) throw new Error(result.error || "HTTP " + response.status);
+    return result;
+  }
+  const buffer = await file.arrayBuffer();
+  let text;
+  try{ text = new TextDecoder("utf-8", {fatal:true}).decode(buffer); }
+  catch(e){ text = new TextDecoder("windows-1252").decode(buffer); }
+  const lines = text.split(/\r\n|\n|\r/);
+  if(!/^(?:EC|BT)-Lab ASCII FILE$/i.test(lines[0]?.trim())){
+    throw new Error("Expected an EC-Lab or BT-Lab ASCII file.");
+  }
+  const count = Number(/^\s*Nb header lines\s*:\s*(\d+)\s*$/i.exec(lines[1] || "")?.[1]);
+  if(!Number.isSafeInteger(count) || count<3 || count>=lines.length){
+    throw new Error("Invalid EC-Lab header line count.");
+  }
+  const headerFields = lines[count-1].split("\t");
+  const headers = txtMakeUniqueHeaders(txtTrimTrailingEmptyFields(headerFields));
+  if(headers.length<2) throw new Error("Expected tab-separated EC-Lab columns.");
+  const rows = [];
+  for(let i=count;i<lines.length;i++){
+    if(!lines[i].trim()) continue;
+    const fields = lines[i].split("\t");
+    if(fields.length<headers.length || fields.slice(headers.length).some(value=>value.trim())){
+      throw new Error("Unexpected number of fields at line " + (i+1) + ".");
+    }
+    const row = Object.create(null);
+    headers.forEach((header,index)=>{
+      const value=fields[index].trim();
+      row[header] = txtDynamicValue(/^[+-]?\d*,\d+(?:e[+-]?\d+)?$/i.test(value) ? value.replace(",",".") : value);
+    });
+    rows.push(row);
+  }
+  if(!rows.length) throw new Error("No EC-Lab measurement rows found.");
+  return {headers, rows};
+}
+
 function ndaxMassFromFilename(name){
   const stem = name.replace(/\.ndax$/i, "");
   const matches = [...stem.matchAll(/(?:^|[^\p{L}\p{N}.+\-])(\d+(?:[._]\d+)*)\s*(mg|[µμu]g|g)(?![\p{L}\p{N}])/giu)];
@@ -3420,6 +3467,20 @@ async function handleFiles(file, confirmedMass){
     }catch(err){
       setLoading(false);
       alert(t("alert_ndax_fail")+err.message+"\n\n"+t("alert_ndax_fail_hint"));
+    }
+  } else if(/\.mp[rt]$/.test(name)){
+    try{
+      const parsed = await parseECLabFile(file);
+      App.workbook = null;
+      App.excelBuffer = null;
+      App.sheetNames = [file.name];
+      App.sheets = { [file.name]: parsed };
+      App.lastTextParseInfo = null;
+      onDataLoaded(file.name);
+    }catch(err){
+      alert("EC-Lab import failed: " + err.message);
+    }finally{
+      setLoading(false);
     }
   } else if(name.endsWith(".csv")){
     Papa.parse(file, {
@@ -4635,7 +4696,18 @@ function mcFindRecordSheet(names){
 
 function mcParseFile(battery, file){
   const name = file.name.toLowerCase();
-  if(name.endsWith(".csv")){
+  if(/\.mp[rt]$/.test(name)){
+    parseECLabFile(file).then(parsed=>{
+      battery.sheetNames = [file.name];
+      battery.sheets = { [file.name]: parsed };
+      battery.activeSheet = file.name;
+      mcFinishBatteryLoad(battery);
+    }).catch(err=>{
+      battery.status = "failed";
+      battery.error = "EC-Lab import failed: " + err.message;
+      mcRenderBatteryList();
+    });
+  } else if(name.endsWith(".csv")){
     Papa.parse(file, {
       header:true, dynamicTyping:true, skipEmptyLines:true, worker:true,
       complete: (res)=>{
@@ -5044,7 +5116,7 @@ function mcBatteryCardHtml(battery, index){
   html += `<div class="mc-battery-body">`;
   html += `<div class="ctrl-row"><label>${esc(t("mc_battery_name"))}</label><input type="text" data-mcaction="name" value="${esc(battery.name)}"></div>`;
   html += `<div class="ctrl-row"><label></label><div style="display:flex;gap:6px;width:100%;">
-    <label class="btn small" style="flex:1;text-align:center;cursor:pointer;">${esc(t("mc_upload_replace"))}<input type="file" data-mcaction="file" accept=".csv,.txt,.xlsx,.xls" style="display:none"></label>
+    <label class="btn small" style="flex:1;text-align:center;cursor:pointer;">${esc(t("mc_upload_replace"))}<input type="file" data-mcaction="file" accept=".mpr,.mpt,.csv,.txt,.xlsx,.xls" style="display:none"></label>
     <button class="btn small" type="button" data-mcaction="remove">${esc(t("mc_remove"))}</button>
   </div></div>`;
   if(battery.error) html += `<p class="mc-file-error">${esc(battery.error)}</p>`;
@@ -6535,7 +6607,7 @@ applyLanguage("en");
   const massInput = document.getElementById("ndaxMassG");
   const hasNdax = Boolean(massInput && /^https?:$/.test(location.protocol)
     && ["127.0.0.1", "localhost"].includes(location.hostname));
-  const supported = hasNdax ? /\.(csv|txt|xlsx?|ndax)$/i : /\.(csv|txt|xlsx?)$/i;
+  const supported = hasNdax ? /\.(csv|txt|mpt|mpr|xlsx?|ndax)$/i : /\.(csv|txt|mpt|xlsx?)$/i;
   const labels = {
     en: {
       title: "Data Library", pick: "Choose / refresh folder", search: "Search file or folder",

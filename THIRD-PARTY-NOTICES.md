@@ -7,3 +7,7 @@ Dependencies are installed locally from `requirements_ndax.txt`; they are not co
 The original Echem Plot Studio license in `LICENSE` is unchanged. No vendor DLLs, compiled reader executables, or research data are distributed by this add-on.
 
 Native OPJU export uses the user's separately installed, licensed Origin and its built-in Python/originpro API. Origin, its Python runtime and its proprietary libraries are not bundled. The exporter invokes the documented Origin command-line interface in a separate process; no external OriginExt package is required.
+
+## Optional BioLogic MPR parser
+
+The local launcher can install datalab-org-galvani 0.6.0 (GPL-3.0-or-later) from PyPI. It runs in a separate parsing process and is not bundled in the distribution. Source and license: https://github.com/datalab-org/galvani-mirror/tree/v0.6.0.

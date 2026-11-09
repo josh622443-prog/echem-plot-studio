@@ -8,7 +8,7 @@ from ndax_reader import check_dependencies
 from origin_export import validate as validate_origin_payload
 
 ROOT = Path(__file__).resolve().parent
-HTML = ROOT / "Echem_Plot_Studio_v1.27.5.html"
+HTML = ROOT / "Echem_Plot_Studio_v1.27.6.html"
 READER = ROOT / 'ndax_reader.py'
 MAX_UPLOAD = 2 * 1024 * 1024 * 1024
 ORIGIN_EXPORTER = ROOT / 'origin_export.py'
@@ -50,13 +50,15 @@ class Handler(BaseHTTPRequestHandler):
                 error = None
             except ImportError as exc:
                 dependencies, ok, error = {}, False, str(exc)
-            return self._send(200 if ok else 503, json.dumps({"ok": ok, "service": "ndax-api", "version": "1.27.5", "root": str(ROOT), "reader": "newarenda-python", "dependencies": dependencies, "error": error}))
+            return self._send(200 if ok else 503, json.dumps({"ok": ok, "service": "ndax-api", "version": "1.27.6", "root": str(ROOT), "reader": "newarenda-python", "dependencies": dependencies, "error": error}))
         self._send(404, json.dumps({"error": "Not found"}))
 
     def do_POST(self):
         parsed = urlparse(self.path)
         if parsed.path == '/api/origin/export':
             return self.export_origin()
+        if parsed.path == "/api/mpr":
+            return self.import_mpr()
         if parsed.path != "/api/ndax":
             return self._send(404, json.dumps({"error": "Not found"}))
         try:
@@ -90,6 +92,38 @@ class Handler(BaseHTTPRequestHandler):
             self._send(400, json.dumps({"error": str(exc)}))
         except Exception as exc:
             self._send(500, json.dumps({"error": str(exc)}))
+
+    def import_mpr(self):
+        if self.headers.get("Content-Type") != "application/octet-stream":
+            return self._send(415, json.dumps({"error": "Expected a binary MPR file."}))
+        origin = self.headers.get("Origin")
+        allowed = {f"http://{host}:{self.server.server_port}" for host in ("127.0.0.1", "localhost")}
+        if origin and origin not in allowed:
+            return self._send(403, json.dumps({"error": "Open the local Echem Plot Studio page."}))
+        try:
+            length = int(self.headers.get("Content-Length", "0"))
+            if length <= 0 or length > MAX_UPLOAD:
+                return self._send(413, json.dumps({"error": "Invalid or oversized upload."}))
+            with tempfile.TemporaryDirectory(prefix="echem-mpr-") as folder:
+                source = Path(folder) / "input.mpr"
+                output = Path(folder) / "result.json"
+                with source.open("wb") as stream:
+                    while length:
+                        chunk = self.rfile.read(min(1024 * 1024, length))
+                        if not chunk:
+                            raise ValueError("Upload ended early.")
+                        stream.write(chunk)
+                        length -= len(chunk)
+                result = subprocess.run([sys.executable, str(ROOT / "mpr_reader.py"), str(source), str(output)],
+                                        capture_output=True, encoding="utf-8", errors="replace", timeout=1800,
+                                        env={**os.environ, "PYTHONUTF8": "1"})
+                if result.returncode:
+                    return self._send(422, json.dumps({"error": result.stderr.strip()[-4000:]}))
+                return self._send(200, output.read_bytes())
+        except ValueError as error:
+            return self._send(400, json.dumps({"error": str(error)}))
+        except (OSError, subprocess.TimeoutExpired) as error:
+            return self._send(500, json.dumps({"error": str(error)}))
 
     def log_message(self, fmt, *args):
         print("[%s] %s" % (self.log_date_time_string(), fmt % args), flush=True)

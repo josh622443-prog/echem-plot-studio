@@ -20,4 +20,11 @@ if ! "$venv_python" ndax_reader.py --check >/dev/null 2>&1; then
   "$venv_python" ndax_reader.py --check
 fi
 
+if ! "$venv_python" -c 'from galvani.BioLogic import MPRfile' >/dev/null 2>&1; then
+  printf '%s\n' 'Installing optional EC-Lab MPR reader...'
+  if ! "$venv_python" -m pip install --no-deps --disable-pip-version-check datalab-org-galvani==0.6.0; then
+    printf '%s\n' 'MPR reader unavailable. Other formats can still be opened.' >&2
+  fi
+fi
+
 exec "$venv_python" ndax_api_server.py --port 0 --open
