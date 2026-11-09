@@ -1,5 +1,7 @@
 # Echem Plot Studio
 
+**新威／藍電 Excel 轉檔工具（Windows）：** [下載 Echem Excel Converter v1.0.0](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Excel-Converter-v1.0.0-Windows.zip)。解壓縮並執行 Convert Echem Excel.cmd，把 .xlsx 的逐點紀錄和已有的循環統計整理成 record／cycle 工作表。
+
 NDAX 匯入會從檔名預填活性物質質量，例如 `sample_45_55mg.ndax` → `0.04555 g`。支援 `g`、`mg` 和 `µg`（也接受 `μg`、`ug`），以及小數點或底線。匯入前可確認或修改。檔名缺少單位、沒有可辨識數值或包含多個質量時，請手動輸入。
 
 **資料庫試用**。在圖表左側的「資料庫」選擇資料夾，可逐層點進子資料夾。用 ← 返回、→ 前進、↑ 上一層，或點路徑列跳轉。清單依列顯示名稱與檔案修改時間，搜尋仍會查找整個所選資料夾。切換繪圖頁籤時側欄保持可用，窄視窗會將資料庫放在圖表上方。搜尋檔名或路徑後，點檔名匯入單檔，或勾選 TXT、CSV 和 Excel 後按「比較勾選檔案」。本機啟動版也可單獨開啟 NDAX，每個檔案需要填入自己的活性物質質量。重新開啟頁面後需重新選擇資料夾。
