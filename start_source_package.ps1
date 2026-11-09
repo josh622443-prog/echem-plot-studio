@@ -68,14 +68,15 @@ if ($probeExit -ne 0) {
   if ($probeExit -ne 0) { throw "NDAX dependencies could not be loaded. Details: $startupLog" }
 }
 if ($CheckOnly) { Write-Stage 'Python NDAX reader is ready.'; return }
-$mprProbe = Invoke-PythonLogged -Executable $python -Arguments @('-c', 'from galvani.BioLogic import MPRfile') -Quiet
+$mprProbe = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'mpr_reader.py'), '--check') -Quiet
 if ($mprProbe -ne 0) {
   Write-Stage 'Installing optional EC-Lab MPR reader...'
   $mprInstall = Invoke-PythonLogged -Executable $python -Arguments @('-m', 'pip', 'install', '--target', $runtimePackages, '--no-deps', '--disable-pip-version-check', 'datalab-org-galvani==0.6.0')
-  if ($mprInstall -ne 0) { Write-Stage 'MPR reader unavailable. Other formats can still be opened.' }
+  $mprProbe = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'mpr_reader.py'), '--check') -Quiet
+  if ($mprInstall -ne 0 -or $mprProbe -ne 0) { Write-Stage 'MPR reader unavailable. Other formats can still be opened.' }
 }
 function Test-CurrentServer($status) {
-  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.8' -and $status.root -eq $root
+  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.9' -and $status.root -eq $root
 }
 $chosenPort = $null
 foreach ($candidatePort in $Port..([Math]::Min(65535,$Port+20))) {

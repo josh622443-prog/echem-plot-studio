@@ -1,7 +1,13 @@
 """Adapter for the separately installed Galvani EC-Lab reader."""
 import json
 import math
+from pathlib import Path
 import sys
+
+
+LOCAL_PACKAGES = Path(__file__).resolve().parent / '.runtime' / 'python'
+if LOCAL_PACKAGES.is_dir():
+    sys.path.insert(0, str(LOCAL_PACKAGES))
 
 
 def read_mpr(source, destination):
@@ -29,7 +35,10 @@ def read_mpr(source, destination):
 
 if __name__ == "__main__":
     try:
-        read_mpr(*sys.argv[1:])
+        if sys.argv[1:] == ["--check"]:
+            from galvani.BioLogic import MPRfile
+        else:
+            read_mpr(*sys.argv[1:])
     except ImportError:
         sys.exit("MPR reader is unavailable. Reopen the local launcher while connected to the internet.")
     except Exception as error:

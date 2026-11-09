@@ -5,7 +5,7 @@ $downloadFolder = Join-Path $packageRoot 'downloads'
 New-Item -ItemType Directory -Path $downloadFolder -Force | Out-Null
 # Explicit allowlist: never include local data, dependencies or machine settings.
 $runtimeFiles = @(
-  'index.html', 'Echem_Plot_Studio_v1.27.8.html', 'data-copy.js',
+  'index.html', 'Echem_Plot_Studio_v1.27.9.html', 'data-copy.js',
   'Start Echem Plot Studio.cmd', 'start_source_package.ps1',
   'ndax_reader.py', 'mpr_reader.py', 'ndax_api_server.py', 'requirements_ndax.txt',
   'origin_export.py', 'README-FIRST.txt', 'LICENSE',
@@ -17,9 +17,9 @@ $filePaths = foreach ($fileName in $runtimeFiles) {
   $filePath
 }
 if ((Get-FileHash -LiteralPath (Join-Path $packageRoot 'index.html')).Hash -ne
-    (Get-FileHash -LiteralPath (Join-Path $packageRoot 'Echem_Plot_Studio_v1.27.8.html')).Hash) {
+    (Get-FileHash -LiteralPath (Join-Path $packageRoot 'Echem_Plot_Studio_v1.27.9.html')).Hash) {
   throw 'Current HTML and index.html differ.'
 }
-$zipPath = Join-Path $downloadFolder 'Echem-Plot-Studio-v1.27.8-Windows.zip'
+$zipPath = Join-Path $downloadFolder 'Echem-Plot-Studio-v1.27.9-Windows.zip'
 Compress-Archive -LiteralPath $filePaths -DestinationPath $zipPath -Force
 Write-Host "Created $zipPath"
