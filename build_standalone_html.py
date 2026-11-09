@@ -39,8 +39,8 @@ def main():
                   "", html, flags=re.M)
     html = remove_section(html, '  if(name.endsWith(".ndax")){',
                           '  } else if(/\\.(?:mp[rt]|cex)$/.test(name)){')
-    html = replace_once(html, '  } else if(/\\.(?:mp[rt]|cex)$/.test(name)){',
-                        '  if(/\\.(?:mpt|cex)$/.test(name)){')
+    html = replace_once(html, '  } else if(/\\.(?:mp[rt]|cex)$/.test(name)){\n    try{',
+                        '  if(/\\.(?:mpt|cex)$/.test(name)){\n    try{')
     html = html.replace('if(/\\.(?:mp[rt]|cex)$/.test(name)){', 'if(/\\.(?:mpt|cex)$/.test(name)){')
     html = remove_section(html, "  async function exportOrigin(page,status){",
                           "  function addButton(container,page,prepend=false){")

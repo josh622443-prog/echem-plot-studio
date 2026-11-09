@@ -59,7 +59,7 @@
   .library-entry-name{display:flex;min-width:0;align-items:center;gap:4px;}
   .library-name-button{border:0;background:transparent;color:var(--ink);font:inherit;text-align:left;cursor:pointer;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:3px;}
   .library-name-button:hover{background:#e5f0eb;border-radius:4px;}
-  .library-entry > input[type="number"]{grid-column:1/-1;}
+  .library-mass{grid-column:1/-1;display:flex;align-items:center;gap:5px;color:var(--muted);}
   #library-list{max-height:42vh;overflow-y:auto;margin-top:8px;}
   .library-pagination{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px;}
   @media (max-width:1050px){
@@ -2932,9 +2932,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.7";
+const APP_VERSION = "1.27.8";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.8",date:"2026-11-09",items:["Select or clear all matching Data Library files and compare NDAX files using each file’s active material mass."]},
   {version:"1.27.7",date:"2026-11-09",items:["Import the verified LAND CEX cycling profile directly."]},
   {version:"1.27.6",date:"2026-11-09",items:["Import EC-Lab MPT text and MPR binary files. MPR uses the local launcher."]},
   {version:"1.27.5",date:"2026-11-09",items:["Use English column names in the built-in demo datasets."]},
@@ -3527,6 +3528,17 @@ function ndaxMassFromFilename(name){
   return Number.isFinite(grams) && grams > 0 ? String(grams) : "";
 }
 
+async function readNdax(file, mass){
+  const response = await fetch("/api/ndax?mass_g="+encodeURIComponent(mass), {
+    method:"POST",
+    headers:{"Content-Type":"application/octet-stream", "X-Filename":encodeURIComponent(file.name)},
+    body:file,
+  });
+  const result = await response.json();
+  if(!response.ok) throw new Error(result.error || ("HTTP "+response.status));
+  return result;
+}
+
 async function handleFiles(file, confirmedMass){
   if(!file) return;
   const name=file.name.toLowerCase();
@@ -3545,13 +3557,7 @@ async function handleFiles(file, confirmedMass){
         alert(t("status_ndax_mass_invalid"));
         return;
       }
-      const response = await fetch("/api/ndax?mass_g="+encodeURIComponent(mass), {
-        method:"POST",
-        headers:{"Content-Type":"application/octet-stream", "X-Filename":file.name},
-        body:file,
-      });
-      const result = await response.json();
-      if(!response.ok) throw new Error(result.error || ("HTTP "+response.status));
+      const result = await readNdax(file, mass);
       App.workbook = null;
       App.excelBuffer = null;
       App.sheetNames = result.sheetNames;
@@ -4770,7 +4776,7 @@ function mcCreateBattery(name){
   };
 }
 
-function mcAddFiles(fileList){
+function mcAddFiles(fileList, massByFile){
   const files = Array.from(fileList||[]);
   if(files.length===0) return;
   // 使用者真的上傳檔案了，示範用的電池就先清掉，避免混在一起造成混淆
@@ -4779,7 +4785,7 @@ function mcAddFiles(fileList){
     const battery = mcCreateBattery(file.name.replace(/\.[^./\\]+$/,""));
     battery.status = "loading";
     App.mc.batteries.push(battery);
-    mcParseFile(battery, file);
+    mcParseFile(battery, file, massByFile?.get(file));
   });
   mcRenderBatteryList();
   mcRenderChart();
@@ -4789,9 +4795,28 @@ function mcFindRecordSheet(names){
   return names.find(name => name.trim().toLowerCase() === "record");
 }
 
-function mcParseFile(battery, file){
+let mcNdaxQueue = Promise.resolve();
+
+function mcParseFile(battery, file, ndaxMass){
   const name = file.name.toLowerCase();
-  if(/\.(?:mp[rt]|cex)$/.test(name)){
+  if(name.endsWith(".ndax") && Number.isFinite(ndaxMass) && ndaxMass>0){
+    // Parse only one NDAX comparison file at a time to limit memory use.
+    mcNdaxQueue = mcNdaxQueue.then(async()=>{
+      if(!App.mc.batteries.includes(battery)) return;
+      try{
+        const result = await readNdax(file, ndaxMass);
+        if(!App.mc.batteries.includes(battery)) return;
+        battery.sheetNames = result.sheetNames;
+        battery.sheets = result.sheets;
+        battery.activeSheet = mcFindRecordSheet(result.sheetNames) || result.sheetNames[0];
+        mcFinishBatteryLoad(battery);
+      }catch(error){
+        battery.status = "failed";
+        battery.error = t("alert_ndax_fail") + error.message;
+        mcRenderBatteryList();
+      }
+    });
+  } else if(/\.(?:mp[rt]|cex)$/.test(name)){
     const reading = /\.cex$/.test(name) ? parseLandtCexFile(file) : parseECLabFile(file);
     reading.then(parsed=>{
       battery.sheetNames = [file.name];
@@ -6674,6 +6699,10 @@ applyLanguage("en");
         <button id="library-pick" class="btn primary" type="button"></button>
         <input id="library-folder" type="file" webkitdirectory multiple hidden>
         <input id="library-search" type="search">
+        <div class="library-navigation">
+          <button id="library-select-all" class="btn" type="button"></button>
+          <button id="library-clear-selection" class="btn" type="button"></button>
+        </div>
         <button id="library-compare" class="btn" type="button"></button>
       </div>
       <nav id="library-location" hidden>
@@ -6699,6 +6728,7 @@ applyLanguage("en");
   const input = get("folder"), search = get("search"), list = get("list");
   const rowList = get("rows"), back = get("back"), forward = get("forward");
   const compare = get("compare"), prev = get("prev"), next = get("next");
+  const selectAll = get("select-all"), clearSelection = get("clear-selection");
   const up = get("up"), locationNav = get("location"), breadcrumb = get("path");
   const massInput = document.getElementById("ndaxMassG");
   const hasNdax = Boolean(massInput && /^https?:$/.test(location.protocol)
@@ -6711,7 +6741,9 @@ applyLanguage("en");
       up: "Up one folder", back: "Back", forward: "Forward", name: "Name", modified: "Date modified",
       location: "Folder path", root: "Selected folder",
       help: "Choose your experiment folder. Files are read when opened or compared. Choose the folder again after reopening this page.",
-      ndax: "NDAX opens individually. Set the active material mass in grams.",
+      ndax: "To open or compare NDAX files, set the active material mass in grams for each file.",
+      all: "Select all", clear: "Clear selection", allHint: "Select files in the current folder or search results, across all pages",
+      invalidMass: "Enter a positive active material mass in grams for: ",
       mass: "Active material mass (g)", busy: "A file is already loading.",
       empty: "No matching files", count: (shown, total, selected) => `${shown} of ${total} files · ${selected} selected`
     },
@@ -6721,7 +6753,9 @@ applyLanguage("en");
       up: "上一層", back: "返回", forward: "前進", name: "名稱", modified: "修改時間",
       location: "資料夾路徑", root: "所選資料夾",
       help: "選擇實驗資料夾。只有開啟或比較時才讀取檔案。重新開啟網頁後請再選一次資料夾。",
-      ndax: "NDAX 支援單檔開啟，請輸入該檔案的活性物質質量（g）。",
+      ndax: "開啟或比較 NDAX 時，請為每個檔案填入活性物質質量（g）。",
+      all: "全選", clear: "取消全選", allHint: "勾選目前資料夾或搜尋結果中所有頁面的檔案",
+      invalidMass: "請輸入大於零的活性物質質量（g）：",
       mass: "活性物質質量（g）", busy: "正在讀取另一個檔案。",
       empty: "沒有符合的檔案", count: (shown, total, selected) => `${shown} / ${total} 個檔案 · 已選 ${selected} 個`
     },
@@ -6731,7 +6765,9 @@ applyLanguage("en");
       up: "上一级", back: "返回", forward: "前进", name: "名称", modified: "修改时间",
       location: "文件夹路径", root: "所选文件夹",
       help: "选择实验文件夹。只有打开或比较时才读取文件。重新打开网页后请再选一次文件夹。",
-      ndax: "NDAX 支持单文件打开，请输入该文件的活性物质质量（g）。",
+      ndax: "打开或比较 NDAX 时，请为每个文件填写活性物质质量（g）。",
+      all: "全选", clear: "取消全选", allHint: "勾选当前文件夹或搜索结果中所有页面的文件",
+      invalidMass: "请输入大于零的活性物质质量（g）：",
       mass: "活性物质质量（g）", busy: "正在读取另一个文件。",
       empty: "没有符合的文件", count: (shown, total, selected) => `${shown} / ${total} 个文件 · 已选 ${selected} 个`
     }
@@ -6747,9 +6783,15 @@ applyLanguage("en");
     document.querySelector(`.tabbtn[data-tab="${name}"]`).click();
   }
 
+  function matchingFiles() {
+    const query = search.value.trim().toLowerCase();
+    return query ? entries.filter(entry => entry.key.includes(query)) : currentFolder?.files || [];
+  }
+
   function updateStatus(matches) {
-    get("status").textContent = words().count(matches, entries.length, selected.size);
-    compare.disabled = selected.size === 0;
+    get("status").textContent = words().count(matches.length, entries.length, selected.size);
+    compare.disabled = clearSelection.disabled = selected.size === 0;
+    selectAll.disabled = matches.every(entry => selected.has(entry));
   }
 
   function makeRow(entry, matches, showPath) {
@@ -6759,8 +6801,6 @@ applyLanguage("en");
     row.className = "library-details library-entry";
     const check = document.createElement("input");
     check.type = "checkbox";
-    check.hidden = ndax;
-    check.disabled = ndax;
     check.checked = selected.has(entry);
     check.setAttribute("aria-label", w.select + " " + path);
     check.addEventListener("change", () => {
@@ -6790,7 +6830,7 @@ applyLanguage("en");
     if (ndax) {
       mass = document.createElement("input");
       mass.type = "number";
-      mass.min = "0.000001";
+      mass.min = "0";
       mass.step = "any";
       mass.required = true;
       mass.value = entry.mass;
@@ -6798,7 +6838,10 @@ applyLanguage("en");
       mass.setAttribute("aria-label", w.mass + " " + path);
       mass.style.width = "128px";
       mass.addEventListener("input", () => { entry.mass = mass.value; });
-      row.append(mass);
+      const massLabel = document.createElement("label");
+      massLabel.className = "library-mass";
+      massLabel.append(mass, "g");
+      row.append(massLabel);
     }
     open.addEventListener("click", () => {
       if (dz.classList.contains("loading")) {
@@ -6807,6 +6850,11 @@ applyLanguage("en");
       }
       if (mass) {
         if (!mass.reportValidity()) return;
+        if (!(Number(mass.value)>0)) {
+          get("status").textContent = w.invalidMass + path;
+          mass.focus();
+          return;
+        }
       }
       showTab("gcd");
       handleFiles(file, mass?.value);
@@ -6873,18 +6921,18 @@ applyLanguage("en");
   function render() {
     const w = words();
     const query = search.value.trim().toLowerCase();
-    const matches = query ? entries.filter(entry => entry.key.includes(query)) : currentFolder?.files || [];
+    const matches = matchingFiles();
     const folders = query || !currentFolder ? [] : Array.from(currentFolder.children.values());
     const rows = [...folders, ...matches];
     const pages = Math.max(1, Math.ceil(rows.length / pageSize));
     page = Math.min(page, pages - 1);
-    updateStatus(matches.length);
+    updateStatus(matches);
     rowList.replaceChildren();
     list.scrollTop = 0;
     renderLocation();
     if (!rows.length) rowList.textContent = w.empty;
     for (const item of rows.slice(page * pageSize, (page + 1) * pageSize)) {
-      rowList.append(item.file ? makeRow(item, matches.length, Boolean(query)) : makeFolderRow(item));
+      rowList.append(item.file ? makeRow(item, matches, Boolean(query)) : makeFolderRow(item));
     }
     get("page").textContent = `${page + 1} / ${pages}`;
     prev.disabled = page === 0;
@@ -6905,6 +6953,9 @@ applyLanguage("en");
     get("modified").textContent = w.modified;
     locationNav.setAttribute("aria-label", w.location);
     compare.textContent = w.compare;
+    selectAll.textContent = w.all;
+    selectAll.title = w.allHint;
+    clearSelection.textContent = w.clear;
     search.placeholder = w.search;
     search.setAttribute("aria-label", w.search);
     prev.setAttribute("aria-label", w.prev);
@@ -6947,10 +6998,28 @@ applyLanguage("en");
   search.addEventListener("input", () => { page = 0; render(); });
   prev.addEventListener("click", () => { page -= 1; render(); });
   next.addEventListener("click", () => { page += 1; render(); });
+  selectAll.addEventListener("click", () => {
+    matchingFiles().forEach(entry => selected.add(entry));
+    render();
+  });
+  clearSelection.addEventListener("click", () => {
+    selected.clear();
+    render();
+  });
   compare.addEventListener("click", () => {
     if (!selected.size) return;
+    const massByFile = new Map();
+    for (const entry of selected) {
+      if (!entry.ndax) continue;
+      const mass = Number(entry.mass);
+      if (!Number.isFinite(mass) || mass<=0) {
+        get("status").textContent = words().invalidMass + entry.path;
+        return;
+      }
+      massByFile.set(entry.file, mass);
+    }
     showTab("multicell");
-    mcAddFiles(Array.from(selected, entry => entry.file));
+    mcAddFiles(Array.from(selected, entry => entry.file), massByFile);
     selected.clear();
     render();
   });
