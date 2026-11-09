@@ -81,9 +81,12 @@ def find_tables(book):
     return candidates
 
 
-def choose(kind, options):
+def choose(kind, options, unattended):
     if len(options) <= 1:
         return options[0] if options else None
+    if unattended:
+        names = ", ".join(sheet.title for sheet, _, _ in options)
+        raise ValueError(f"Multiple {kind} tables found ({names}). Drop the workbook on the .cmd to choose a sheet.")
     print(f"\nMultiple {kind} tables found. Choose the sheet to export:")
     for index, (sheet, header, _) in enumerate(options, 1):
         print(f"  {index}. {sheet.title} (header row {header})")
@@ -144,11 +147,11 @@ def write_table(book, kind, table, make_cell):
     print(f"  {source.title} -> {kind}: {count:,} rows", flush=True)
 
 
-def convert(source):
+def convert(source, unattended=False):
     openpyxl = dependencies(source)
     with closing(openpyxl.load_workbook(source, read_only=True, data_only=True)) as incoming:
         candidates = find_tables(incoming)
-        chosen = [(kind, choose(kind, candidates[kind])) for kind in ("cycle", "record")]
+        chosen = [(kind, choose(kind, candidates[kind], unattended)) for kind in ("cycle", "record")]
         chosen = [(kind, table) for kind, table in chosen if table is not None]
         if not chosen:
             raise ValueError(
@@ -178,6 +181,7 @@ def convert(source):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", nargs="?", type=Path)
+    parser.add_argument("--unattended", action="store_true")
     args = parser.parse_args()
     source = args.source
     if source is None:
@@ -193,7 +197,7 @@ def main():
             return 0
         source = Path(filename)
     try:
-        final = convert(source.resolve(strict=True))
+        final = convert(source.resolve(strict=True), unattended=args.unattended)
         print(f"\nDone. Open this file in Echem Plot Studio:\n{final}")
         return 0
     except Exception as error:
