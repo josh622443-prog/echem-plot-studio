@@ -73,12 +73,12 @@
         const name=names.get(battery.name)>1?battery.name+' ['+(bi+1)+']':battery.name;
         if(App.mc.mode==='custom'){
           if(!battery.mapping.x||!battery.mapping.y1)return;
-          const xr=mcGetAxisValues(battery,'x'),xLabel=mcAxisLabel(App.mc.customAxes.x.metric,xr.effectiveUnit);
-          ['y1','y2'].forEach(axis=>{
-            if(!App.mc.customAxes[axis].metric||!battery.mapping[axis])return;
-            const yr=mcGetAxisValues(battery,axis),clean=pairwiseClean(xr.values,yr.values),yLabel=mcAxisLabel(App.mc.customAxes[axis].metric,yr.effectiveUnit);
-            clean[0].forEach((x,i)=>rows.push([name,axis.toUpperCase(),x,clean[1][i],xLabel,yLabel]));
-          });return;
+          for(const {axis,tag,x,y,xUnit,yUnit} of mcCustomPairs(battery)){
+            const xLabel=mcAxisLabel(App.mc.customAxes.x.metric,xUnit),yLabel=mcAxisLabel(App.mc.customAxes[axis].metric,yUnit);
+            const label=[tag,axis.toUpperCase()].filter(Boolean).join(" · ");
+            x.forEach((value,i)=>rows.push([name,label,value,y[i],xLabel,yLabel]));
+          }
+          return;
         }
         if(!mcRequiredFieldsOk(battery))return;
         const sheet=mcActiveSheetObj(battery),selected=mcEnsureSelectedCycles(battery,bi*4);

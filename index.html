@@ -1916,6 +1916,8 @@ const TRANSLATIONS = {
     mc_cycle_rebase_placeholder: "留空＝不校準",
     mc_cycle_rebase_hint: "填入「原始資料裡的哪一圈」要當作圖上的第 1 圈，方便不同起始圈數的電池對齊比較。",
     mc_cycle_select: "顯示圈數",
+    mc_custom_color: "電池顏色",
+    mc_custom_cycle_hint: "留空顯示全部，例如 1,5,10-20",
     tab_battery_info: "電池資料",
     label_loaded_file: "目前檔案",
     bi_no_file: "（尚未上傳檔案，顯示示範資料）",
@@ -2279,6 +2281,8 @@ const TRANSLATIONS = {
     mc_cycle_rebase_placeholder: "留空＝不校准",
     mc_cycle_rebase_hint: "填入「原始数据里的哪一圈」要当作图上的第 1 圈，方便不同起始圈数的电池对齐比较。",
     mc_cycle_select: "显示圈数",
+    mc_custom_color: "电池颜色",
+    mc_custom_cycle_hint: "留空显示全部，例如 1,5,10-20",
     tab_battery_info: "电池资料",
     label_loaded_file: "目前文件",
     bi_no_file: "（尚未上传文件，显示示范数据）",
@@ -2642,6 +2646,8 @@ const TRANSLATIONS = {
     mc_cycle_rebase_placeholder: "Blank = no rebase",
     mc_cycle_rebase_hint: "Enter which raw cycle number should be treated as cycle 1 on the chart — useful for aligning batteries that don't start at the same cycle count.",
     mc_cycle_select: "Cycles shown",
+    mc_custom_color: "Battery color",
+    mc_custom_cycle_hint: "Blank = all, e.g. 1,5,10-20",
     tab_battery_info: "Battery Info",
     label_loaded_file: "Current file",
     bi_no_file: "(No file uploaded — showing demo data)",
@@ -2932,9 +2938,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.9";
+const APP_VERSION = "1.27.10";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.10",date:"2026-11-09",items:["Set battery colors and filter cycles in Multi-Cell Custom Axes."]},
   {version:"1.27.9",date:"2026-11-09",items:["Load the locally installed EC-Lab MPR reader from the Windows launcher package."]},
   {version:"1.27.8",date:"2026-11-09",items:["Select or clear all matching Data Library files and compare NDAX files using each file’s active material mass."]},
   {version:"1.27.7",date:"2026-11-09",items:["Import the verified LAND CEX cycling profile directly."]},
@@ -4238,7 +4245,13 @@ function collectMultiCellData(){
       });
     });
   }else{
-    App.mc.batteries.forEach(battery=>{if(!battery.enabled||!mcIsReady(battery)||!battery.mapping.x||!battery.mapping.y1)return; const xr=mcGetAxisValues(battery,"x"), y1r=mcGetAxisValues(battery,"y1"), c=pairwiseClean(xr.values,y1r.values); c[0].forEach((x,i)=>rows.push([battery.name,"",x,c[1][i]])); if(App.mc.customAxes.y2.metric&&battery.mapping.y2){const y2r=mcGetAxisValues(battery,"y2"),c2=pairwiseClean(mcGetAxisValues(battery,"x").values,y2r.values); c2[0].forEach((x,i)=>rows.push([battery.name,"Y2",x,c2[1][i]]));}});
+    App.mc.batteries.forEach(battery=>{
+      if(!battery.enabled || !mcIsReady(battery)) return;
+      for(const {axis,tag,x,y} of mcCustomPairs(battery)){
+        const label = [tag,axis==="y2"?"Y2":""].filter(Boolean).join(" · ");
+        x.forEach((value,i)=>rows.push([battery.name,label,value,y[i]]));
+      }
+    });
   }
   return {headers,rows};
 }
@@ -4397,7 +4410,9 @@ function rowsBySelectedCycle(rows, column, cycles){
   const groups = new Map(cycles.map(cycle=>[Number(cycle),[]]));
   if(!groups.size) return groups;
   for(const row of rows){
-    const group = groups.get(Number(row[column]));
+    const value = row[column];
+    if(value===null || value===undefined || String(value).trim()==="") continue;
+    const group = groups.get(Number(value));
     if(group) group.push(row);
   }
   return groups;
@@ -4773,7 +4788,7 @@ function mcCreateBattery(name){
     status:"empty", error:null,
     sheetNames:[], sheets:{}, activeSheet:null,
     mapping:{ cycle:null, voltage:null, capacity:null, x:null, y1:null, y2:null },
-    cycleOrigin:null, cycleSpec:"", selectedCycles:null,
+    cycleOrigin:null, cycleSpec:"", customCycleSpec:"", selectedCycles:null,
   };
 }
 
@@ -5260,6 +5275,15 @@ function mcBatteryCardHtml(battery, index){
         });
         html += `</select></div>`;
       });
+      html += '<div class="ctrl-row"><label>' + esc(t("mc_custom_color")) + '</label><input type="color" data-mcaction="custom-color" aria-label="' + esc(t("mc_custom_color")) + '" value="' + esc(battery.color) + '"></div>';
+      html += '<div class="ctrl-row"><label>' + esc(t("label_meas_col")) + '</label><select data-mcaction="map-cycle" aria-label="' + esc(t("label_meas_col")) + '"><option value="">－</option>';
+      sheet.headers.forEach(h=>{
+        html += '<option value="' + esc(h) + '"' + (battery.mapping.cycle===h ? ' selected' : '') + '>' + esc(h) + '</option>';
+      });
+      html += '</select></div>';
+      if(battery.mapping.cycle){
+        html += '<div class="ctrl-row"><label>' + esc(t("mc_cycle_select")) + '</label><input type="text" data-mcaction="custom-cycle-spec" aria-label="' + esc(t("mc_cycle_select")) + '" placeholder="' + esc(t("mc_custom_cycle_hint")) + '" value="' + esc(battery.customCycleSpec||"") + '"></div>';
+      }
     } else {
       [["cycle","label_meas_col"],["voltage","label_voltage_col"],["capacity","mc_col_capacity"]].forEach(([k,labelKey])=>{
         const needsCheck = !battery.mapping[k];
@@ -5346,6 +5370,18 @@ function mcWireBatteryCards(){
         if(k==="cycle") battery.selectedCycles = null;
         mcRenderBatteryList(); mcRenderChart();
       });
+    });
+    const customColor = card.querySelector('[data-mcaction="custom-color"]');
+    if(customColor) customColor.addEventListener("change", ()=>{
+      if(battery.color===customColor.value) return;
+      battery.color = customColor.value;
+      card.style.setProperty("--cell-color",battery.color);
+      mcRenderChart();
+    });
+    const customCycles = card.querySelector('[data-mcaction="custom-cycle-spec"]');
+    if(customCycles) customCycles.addEventListener("change", ()=>{
+      battery.customCycleSpec = customCycles.value.trim();
+      mcRenderChart();
     });
     const originInput = card.querySelector('[data-mcaction="cycle-origin"]');
     if(originInput) originInput.addEventListener("change", ()=>{
@@ -5526,7 +5562,7 @@ function mcParseDurationSeconds(raw){
   if(!m || Number(m[3])>=60 || Number(m[4])>=60) return NaN;
   return Number(m[1]||0)*86400+Number(m[2])*3600+Number(m[3])*60+Number(m[4]);
 }
-function mcGetAxisValues(battery, axisKey){
+function mcGetAxisValues(battery, axisKey, rows){
   const sheet = mcActiveSheetObj(battery);
   const col = battery.mapping[axisKey];
   const axisCfg = App.mc.customAxes[axisKey];
@@ -5535,7 +5571,7 @@ function mcGetAxisValues(battery, axisKey){
   const targetUnit = axisCfg.unit || "";
   const effectiveUnit = (sourceUnit && !mcUnitConvertible(sourceUnit, targetUnit)) ? sourceUnit : targetUnit;
   const isTime = ["time","charge_time","discharge_time"].includes(axisCfg.metric);
-  const values = sheet.rows.map(row=>{
+  const values = (rows || sheet.rows).map(row=>{
     const raw=row[col];
     if(raw===null || raw===undefined || String(raw).trim()==="") return NaN;
     if(isTime && typeof raw==="string" && raw.includes(":")){
@@ -5545,6 +5581,26 @@ function mcGetAxisValues(battery, axisKey){
     return Number.isFinite(v) ? mcConvertValue(v, sourceUnit, effectiveUnit) : NaN;
   });
   return { values, effectiveUnit };
+}
+
+function mcCustomPairs(battery){
+  const sheet = mcActiveSheetObj(battery);
+  if(!sheet || !battery.mapping.x || !battery.mapping.y1) return [];
+  const picked = battery.mapping.cycle && battery.customCycleSpec?.trim()
+    ? mcParseCycleSpec(battery.customCycleSpec, mcGetRawCycles(battery)) : null;
+  const groups = picked ? rowsBySelectedCycle(sheet.rows,battery.mapping.cycle,picked) : new Map([[null,sheet.rows]]);
+  const pairs = [];
+  for(const [cycle, rows] of groups){
+    const xr = mcGetAxisValues(battery,"x",rows);
+    for(const axis of ["y1","y2"]){
+      if(!App.mc.customAxes[axis].metric || !battery.mapping[axis]) continue;
+      const yr = mcGetAxisValues(battery,axis,rows);
+      const [x,y] = pairwiseClean(xr.values,yr.values);
+      const tag = cycle===null ? "" : "Cyc "+cycle;
+      pairs.push({axis,tag,x,y,xUnit:xr.effectiveUnit,yUnit:yr.effectiveUnit,total:rows.length});
+    }
+  }
+  return pairs;
 }
 
 function mcRenderCustom(){
@@ -5559,27 +5615,21 @@ function mcRenderCustom(){
   App.mc.batteries.forEach(battery=>{
     if(!battery.enabled || !mcIsReady(battery)) return;
     if(!battery.mapping.x || !battery.mapping.y1){ diagnostics.push(battery.name+": select X and Y1 columns"); return; }
-    const xr = mcGetAxisValues(battery, "x"), y1r = mcGetAxisValues(battery, "y1");
-    xEffUnit = xr.effectiveUnit; y1EffUnit = y1r.effectiveUnit;
-    const [xc, yc] = pairwiseClean(xr.values, y1r.values);
-    diagnostics.push(battery.name+": "+xc.length+" / "+xr.values.length+" valid X/Y1 pairs ("+battery.mapping.x+" → "+xr.effectiveUnit+", "+battery.mapping.y1+" → "+y1r.effectiveUnit+")"+(xc.length===0?". Check values and column mapping; elapsed time supports HH:MM:SS[.sss] or D d HH:MM:SS.":""));
-    if(xc.length){
-      const [rx, ry] = decimateForRender(xc, yc, 2000);
-      const label = battery.name + (y2Metric && battery.mapping.y2 ? " · "+mcMetricLabel(y1Metric) : "");
-      if(showLine) series.push({ x:rx, y:ry, color:battery.color, mode:"line", lineWidth:lw, label: showMarkers?undefined:label });
-      if(showMarkers) series.push({ x:rx, y:ry, color:battery.color, mode:"scatter", shape:"circle", markerSize:ms, filled:true, label });
+    const pairs = mcCustomPairs(battery);
+    if(!pairs.length) diagnostics.push(battery.name+": no matching cycles");
+    let valid=0, total=0;
+    for(const {axis,tag,x,y,xUnit,yUnit,total:count} of pairs){
+      const secondary = axis==="y2";
+      if(secondary) y2EffUnit=yUnit;
+      else { xEffUnit=xUnit; y1EffUnit=yUnit; valid+=x.length; total+=count; }
+      if(!x.length) continue;
+      const [rx,ry] = decimateForRender(x,y,2000);
+      const label = [battery.name,tag,(y2Metric && battery.mapping.y2) ? mcMetricLabel(secondary ? y2Metric : y1Metric) : ""].filter(Boolean).join(" · ");
+      const target = secondary ? series2 : series;
+      if(showLine) target.push({x:rx,y:ry,color:battery.color,mode:"line",lineWidth:lw,dash:secondary?"4,3":undefined,label:showMarkers?undefined:label});
+      if(showMarkers) target.push({x:rx,y:ry,color:battery.color,mode:"scatter",shape:secondary?"triangle":"circle",markerSize:ms,filled:true,label});
     }
-    if(y2Metric && battery.mapping.y2){
-      const y2r = mcGetAxisValues(battery, "y2");
-      y2EffUnit = y2r.effectiveUnit;
-      const [x2c, y2c] = pairwiseClean(mcGetAxisValues(battery,"x").values, y2r.values);
-      if(x2c.length){
-        const [rx2, ry2] = decimateForRender(x2c, y2c, 2000);
-        const label2 = battery.name+" · "+mcMetricLabel(y2Metric);
-        if(showLine) series2.push({ x:rx2, y:ry2, color:battery.color, mode:"line", lineWidth:lw, dash:"4,3", label: showMarkers?undefined:label2 });
-        if(showMarkers) series2.push({ x:rx2, y:ry2, color:battery.color, mode:"scatter", shape:"triangle", markerSize:ms, filled:true, label:label2 });
-      }
-    }
+    if(pairs.length) diagnostics.push(battery.name+": "+valid+" / "+total+" valid X/Y1 pairs ("+battery.mapping.x+" → "+xEffUnit+", "+battery.mapping.y1+" → "+y1EffUnit+")"+(valid===0?". Check values and column mapping; elapsed time supports HH:MM:SS[.sss] or D d HH:MM:SS.":""));
   });
   const yAuto = ctrlVal("multicell","y-auto");
   const yDomain = yAuto ? null : [parseFloat(ctrlVal("multicell","y-min")), parseFloat(ctrlVal("multicell","y-max"))];
@@ -5597,42 +5647,7 @@ function mcRenderCustom(){
 }
 
 function mcDownloadCsv(){
-  const rows = [];
-  const headers = ["battery","cycle_or_series","x","y"];
-  if(App.mc.mode==="gcd" || App.mc.mode==="dqdv"){
-    App.mc.batteries.forEach((battery,bi)=>{
-      if(!battery.enabled || !mcIsReady(battery) || !mcRequiredFieldsOk(battery)) return;
-      const sheet = mcActiveSheetObj(battery);
-      const sel = mcEnsureSelectedCycles(battery, bi*4);
-      Object.keys(sel).forEach(rebasedCyc=>{
-        const rawCyc = mcUnrebase(battery, Number(rebasedCyc));
-        const sub = sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===rawCyc);
-        if(App.mc.mode==="gcd"){
-          const qArr = numCol(sub, battery.mapping.capacity), vArr = numCol(sub, battery.mapping.voltage);
-          const [qc,vc] = pairwiseClean(qArr, vArr);
-          qc.forEach((q,i)=> rows.push([battery.name, "Cyc "+rebasedCyc, q, vc[i]]));
-        } else {
-          const qArr = numCol(sub, battery.mapping.capacity), vArr = numCol(sub, battery.mapping.voltage);
-          const [qc, vc] = pairwiseClean(qArr, vArr);
-          const { v, dqdv } = computeDqDv(qc, vc, 250, 7);
-          v.forEach((vv,i)=> rows.push([battery.name, "Cyc "+rebasedCyc, vv, dqdv[i]]));
-        }
-      });
-    });
-  } else {
-    App.mc.batteries.forEach(battery=>{
-      if(!battery.enabled || !mcIsReady(battery)) return;
-      if(!battery.mapping.x || !battery.mapping.y1) return;
-      const xr = mcGetAxisValues(battery,"x"), y1r = mcGetAxisValues(battery,"y1");
-      const [xc,yc] = pairwiseClean(xr.values, y1r.values);
-      xc.forEach((x,i)=> rows.push([battery.name, "", x, yc[i]]));
-      if(App.mc.customAxes.y2.metric && battery.mapping.y2){
-        const y2r = mcGetAxisValues(battery,"y2");
-        const [x2c,y2c] = pairwiseClean(mcGetAxisValues(battery,"x").values, y2r.values);
-        x2c.forEach((x,i)=> rows.push([battery.name, "Y2", x, y2c[i]]));
-      }
-    });
-  }
+  const {headers,rows} = collectMultiCellData();
   if(rows.length===0){ alert(t("alert_no_export")); return; }
   const csv = buildCSV(headers, rows);
   const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
@@ -6550,12 +6565,12 @@ applyLanguage("en");
         const name=names.get(battery.name)>1?battery.name+' ['+(bi+1)+']':battery.name;
         if(App.mc.mode==='custom'){
           if(!battery.mapping.x||!battery.mapping.y1)return;
-          const xr=mcGetAxisValues(battery,'x'),xLabel=mcAxisLabel(App.mc.customAxes.x.metric,xr.effectiveUnit);
-          ['y1','y2'].forEach(axis=>{
-            if(!App.mc.customAxes[axis].metric||!battery.mapping[axis])return;
-            const yr=mcGetAxisValues(battery,axis),clean=pairwiseClean(xr.values,yr.values),yLabel=mcAxisLabel(App.mc.customAxes[axis].metric,yr.effectiveUnit);
-            clean[0].forEach((x,i)=>rows.push([name,axis.toUpperCase(),x,clean[1][i],xLabel,yLabel]));
-          });return;
+          for(const {axis,tag,x,y,xUnit,yUnit} of mcCustomPairs(battery)){
+            const xLabel=mcAxisLabel(App.mc.customAxes.x.metric,xUnit),yLabel=mcAxisLabel(App.mc.customAxes[axis].metric,yUnit);
+            const label=[tag,axis.toUpperCase()].filter(Boolean).join(" · ");
+            x.forEach((value,i)=>rows.push([name,label,value,y[i],xLabel,yLabel]));
+          }
+          return;
         }
         if(!mcRequiredFieldsOk(battery))return;
         const sheet=mcActiveSheetObj(battery),selected=mcEnsureSelectedCycles(battery,bi*4);
