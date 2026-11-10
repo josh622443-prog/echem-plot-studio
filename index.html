@@ -1909,6 +1909,8 @@ const TRANSLATIONS = {
     mc_status_empty: "尚未上傳",
     mc_enabled: "啟用",
     mc_battery_name: "電池名稱",
+    mc_battery_plot: "顯示於",
+    mc_plot_default: "預設（跟隨上方圖表）",
     mc_upload_replace: "上傳／替換檔案",
     mc_remove: "移除",
     mc_col_capacity: "容量欄",
@@ -2274,6 +2276,8 @@ const TRANSLATIONS = {
     mc_status_empty: "尚未上传",
     mc_enabled: "启用",
     mc_battery_name: "电池名称",
+    mc_battery_plot: "显示于",
+    mc_plot_default: "默认（跟随上方图表）",
     mc_upload_replace: "上传／替换文件",
     mc_remove: "移除",
     mc_col_capacity: "容量列",
@@ -2639,6 +2643,8 @@ const TRANSLATIONS = {
     mc_status_empty: "No file yet",
     mc_enabled: "Enabled",
     mc_battery_name: "Battery name",
+    mc_battery_plot: "Plot",
+    mc_plot_default: "Default (follow active plot)",
     mc_upload_replace: "Upload / replace file",
     mc_remove: "Remove",
     mc_col_capacity: "Capacity column",
@@ -2938,9 +2944,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.10";
+const APP_VERSION = "1.27.11";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.11",date:"2026-11-09",items:["Choose which Multi-Cell plot each battery appears in."]},
   {version:"1.27.10",date:"2026-11-09",items:["Set battery colors and filter cycles in Multi-Cell Custom Axes."]},
   {version:"1.27.9",date:"2026-11-09",items:["Load the locally installed EC-Lab MPR reader from the Windows launcher package."]},
   {version:"1.27.8",date:"2026-11-09",items:["Select or clear all matching Data Library files and compare NDAX files using each file’s active material mass."]},
@@ -4236,7 +4243,7 @@ function collectMultiCellData(){
   if(!App.mc || !App.mc.batteries) return {headers,rows};
   if(App.mc.mode==="gcd" || App.mc.mode==="dqdv"){
     App.mc.batteries.forEach((battery,bi)=>{
-      if(!battery.enabled || !mcIsReady(battery) || !mcRequiredFieldsOk(battery)) return;
+      if(!mcShouldPlotBattery(battery) || !mcRequiredFieldsOk(battery)) return;
       const sheet=mcActiveSheetObj(battery), sel=mcEnsureSelectedCycles(battery,bi*4);
       Object.keys(sel).forEach(rebasedCyc=>{
         const rawCyc=mcUnrebase(battery,Number(rebasedCyc)), sub=sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===rawCyc), qArr=numCol(sub,battery.mapping.capacity), vArr=numCol(sub,battery.mapping.voltage), clean=pairwiseClean(qArr,vArr);
@@ -4246,7 +4253,7 @@ function collectMultiCellData(){
     });
   }else{
     App.mc.batteries.forEach(battery=>{
-      if(!battery.enabled || !mcIsReady(battery)) return;
+      if(!mcShouldPlotBattery(battery)) return;
       for(const {axis,tag,x,y} of mcCustomPairs(battery)){
         const label = [tag,axis==="y2"?"Y2":""].filter(Boolean).join(" · ");
         x.forEach((value,i)=>rows.push([battery.name,label,value,y[i]]));
@@ -4784,7 +4791,7 @@ function mcCreateBattery(name){
   const id = App.mc.nextId++;
   const color = PALETTE[(id-1) % PALETTE.length];
   return {
-    id, name: name || (t("mc_default_name")+" "+id), color, enabled:true, open:true,
+    id, name: name || (t("mc_default_name")+" "+id), color, enabled:true, open:true, plotMode:"default",
     status:"empty", error:null,
     sheetNames:[], sheets:{}, activeSheet:null,
     mapping:{ cycle:null, voltage:null, capacity:null, x:null, y1:null, y2:null },
@@ -4909,6 +4916,10 @@ function mcFinishBatteryLoad(battery){
 }
 
 function mcIsReady(battery){ return battery.status==="loaded" || battery.status==="demo"; }
+function mcShouldPlotBattery(battery){
+  return battery.enabled && mcIsReady(battery) &&
+    (!battery.plotMode || battery.plotMode==="default" || battery.plotMode===App.mc.mode);
+}
 function mcActiveSheetObj(battery){
   if(!battery.activeSheet) return null;
   return battery.sheets[battery.activeSheet] || null;
@@ -5256,6 +5267,12 @@ function mcBatteryCardHtml(battery, index){
     <label class="btn small" style="flex:1;text-align:center;cursor:pointer;">${esc(t("mc_upload_replace"))}<input type="file" data-mcaction="file" accept=".mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls" style="display:none"></label>
     <button class="btn small" type="button" data-mcaction="remove">${esc(t("mc_remove"))}</button>
   </div></div>`;
+  const plotOptions = [["default",t("mc_plot_default")],["gcd",t("mc_mode_gcd")],["dqdv","dQ/dV"],["custom",t("mc_mode_custom")]];
+  html += '<div class="ctrl-row"><label>' + esc(t("mc_battery_plot")) + '</label><select data-mcaction="plot" aria-label="' + esc(t("mc_battery_plot")) + '">';
+  for(const [value,label] of plotOptions){
+    html += '<option value="' + value + '"' + ((battery.plotMode||"default")===value ? ' selected' : '') + '>' + esc(label) + '</option>';
+  }
+  html += '</select></div>';
   if(battery.error) html += `<p class="mc-file-error">${esc(battery.error)}</p>`;
 
   if(sheet){
@@ -5339,6 +5356,11 @@ function mcWireBatteryCards(){
     card.querySelector('[data-mcaction="enabled"]').addEventListener("click", (e)=>{
       e.stopPropagation();
       battery.enabled = e.target.checked;
+      mcRenderChart();
+    });
+    const plotSelect = card.querySelector('[data-mcaction="plot"]');
+    plotSelect.addEventListener("change", ()=>{
+      battery.plotMode = plotSelect.value;
       mcRenderChart();
     });
     const nameInput = card.querySelector('[data-mcaction="name"]');
@@ -5492,7 +5514,7 @@ function mcRenderGcd(){
   const ms = parseFloat(ctrlVal("multicell","markersize")||3);
   const series = [];
   App.mc.batteries.forEach((battery,bi)=>{
-    if(!battery.enabled || !mcIsReady(battery) || !mcRequiredFieldsOk(battery)) return;
+    if(!mcShouldPlotBattery(battery) || !mcRequiredFieldsOk(battery)) return;
     const sheet = mcActiveSheetObj(battery);
     const sel = mcEnsureSelectedCycles(battery, bi*4);
     const groups = rowsBySelectedCycle(sheet.rows, battery.mapping.cycle, Object.keys(sel).map(cycle=>mcUnrebase(battery, Number(cycle))));
@@ -5526,7 +5548,7 @@ function mcRenderDqdv(){
   const ms = parseFloat(ctrlVal("multicell","markersize")||3);
   const series = [];
   App.mc.batteries.forEach((battery,bi)=>{
-    if(!battery.enabled || !mcIsReady(battery) || !mcRequiredFieldsOk(battery)) return;
+    if(!mcShouldPlotBattery(battery) || !mcRequiredFieldsOk(battery)) return;
     const sheet = mcActiveSheetObj(battery);
     const sel = mcEnsureSelectedCycles(battery, bi*4);
     const groups = rowsBySelectedCycle(sheet.rows, battery.mapping.cycle, Object.keys(sel).map(cycle=>mcUnrebase(battery, Number(cycle))));
@@ -5613,7 +5635,7 @@ function mcRenderCustom(){
   const series = [], series2 = [], diagnostics = [];
   let xEffUnit = App.mc.customAxes.x.unit, y1EffUnit = App.mc.customAxes.y1.unit, y2EffUnit = App.mc.customAxes.y2.unit;
   App.mc.batteries.forEach(battery=>{
-    if(!battery.enabled || !mcIsReady(battery)) return;
+    if(!mcShouldPlotBattery(battery)) return;
     if(!battery.mapping.x || !battery.mapping.y1){ diagnostics.push(battery.name+": select X and Y1 columns"); return; }
     const pairs = mcCustomPairs(battery);
     if(!pairs.length) diagnostics.push(battery.name+": no matching cycles");
@@ -6561,7 +6583,7 @@ applyLanguage("en");
       const rows=[],headers=['Battery','Cycle / axis','X','Y','X field / unit','Y field / unit'];
       const names=new Map();App.mc.batteries.forEach(b=>names.set(b.name,(names.get(b.name)||0)+1));
       App.mc.batteries.forEach((battery,bi)=>{
-        if(!battery.enabled||!mcIsReady(battery))return;
+        if(!mcShouldPlotBattery(battery))return;
         const name=names.get(battery.name)>1?battery.name+' ['+(bi+1)+']':battery.name;
         if(App.mc.mode==='custom'){
           if(!battery.mapping.x||!battery.mapping.y1)return;

@@ -37,7 +37,7 @@ class BridgeTests(unittest.TestCase):
             with urlopen(self.url + '/health') as response:
                 status = json.load(response)
         self.assertTrue(status['ok'])
-        self.assertEqual(status['version'], '1.27.10')
+        self.assertEqual(status['version'], '1.27.11')
         self.assertEqual(status['root'], str(api.ROOT))
 
     def test_upload_returns_extractor_workbook(self):

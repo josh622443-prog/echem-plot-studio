@@ -76,7 +76,7 @@ if ($mprProbe -ne 0) {
   if ($mprInstall -ne 0 -or $mprProbe -ne 0) { Write-Stage 'MPR reader unavailable. Other formats can still be opened.' }
 }
 function Test-CurrentServer($status) {
-  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.10' -and $status.root -eq $root
+  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.11' -and $status.root -eq $root
 }
 $chosenPort = $null
 foreach ($candidatePort in $Port..([Math]::Min(65535,$Port+20))) {

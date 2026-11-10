@@ -69,7 +69,7 @@
       const rows=[],headers=['Battery','Cycle / axis','X','Y','X field / unit','Y field / unit'];
       const names=new Map();App.mc.batteries.forEach(b=>names.set(b.name,(names.get(b.name)||0)+1));
       App.mc.batteries.forEach((battery,bi)=>{
-        if(!battery.enabled||!mcIsReady(battery))return;
+        if(!mcShouldPlotBattery(battery))return;
         const name=names.get(battery.name)>1?battery.name+' ['+(bi+1)+']':battery.name;
         if(App.mc.mode==='custom'){
           if(!battery.mapping.x||!battery.mapping.y1)return;
