@@ -94,7 +94,7 @@ if ($probeExit -ne 0 -or $mprProbe -ne 0) {
 if ($CheckOnly) { Write-Stage 'Python NDAX reader is ready.'; return }
 
 function Test-CurrentServer($status) {
-  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.12' -and $status.root -eq $root
+  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.13' -and $status.root -eq $root
 }
 $chosenPort = $null
 foreach ($candidatePort in $Port..([Math]::Min(65535,$Port+20))) {

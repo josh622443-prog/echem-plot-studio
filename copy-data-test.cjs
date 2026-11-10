@@ -58,6 +58,23 @@ const {chromium}=require('playwright');
     battery.sheets={record:{headers:['Time',column],rows:[{Time:0,[column]:5}]}};mcAutoMapBattery(battery);return battery;
    });
    const duplicate=api.collect('multicell');check(duplicate.rows.length===2&&duplicate.rows[0][5]!==duplicate.rows[1][5],'Same-named batteries retain their own effective units');
+   const savedBatteries=App.mc.batteries, savedMode=App.mc.mode;
+   const segmented=mcCreateBattery('segmented');
+   segmented.status='loaded';segmented.sheetNames=['record'];segmented.activeSheet='record';
+   const segmentHeaders=['Cycle Index','Current(A)','Voltage(V)','Discharge Capacity(mAh)','Spec. Cap.(mAh/g)'];
+   segmented.sheets={record:{headers:segmentHeaders,rows:[
+    [1,1,3,0,0],[1,1,3.5,.5,50],[1,1,4,1,100],
+    [1,-1,4,0,0],[1,-1,3.4,.4,40],[1,-1,3,.8,80]
+   ].map(row=>Object.fromEntries(segmentHeaders.map((header,i)=>[header,row[i]])))}};
+   App.mc.batteries=[segmented];App.mc.mode='gcd';mcAutoMapBattery(segmented);
+   check(segmented.mapping.capacity==='Spec. Cap.(mAh/g)','Prefer generic specific capacity over direction-specific absolute capacity');
+   const separated=api.collect('multicell'), separatedWide=api.wideData('multicell'), separatedOrigin=api.originPayload('multicell');
+   check(separated.rows.length===7&&separated.rows[3][2]===null&&separated.rows[3][3]===null,'Multi-cell charge/discharge gap in table data');
+   check(JSON.stringify(separatedWide.rows)===JSON.stringify([[0,3],[50,3.5],[100,4],[null,null],[0,4],[40,3.4],[80,3]]),'Multi-cell wide XY has exactly one blank between charge and discharge');
+   check(separatedOrigin.plots[0].segment===6&&separatedOrigin.rows[3][6]===1,'Multi-cell native payload preserves segment boundary');
+   const exported=collectMultiCellData();check(exported.rows[3][2]===null&&exported.rows[3][3]===null,'CSV and combined workbook preserve blank XY');
+   App.mc.batteries=savedBatteries;App.mc.mode=savedMode;
+
    App.opTimeHoursFull=Array.from({length:41},(_,i)=>i/10);App.opEweFull=App.opTimeHoursFull.map(t=>3+t*.0001);
    const params={savgolWindow:5,savgolPolyorder:2,minFlatDurationH:.2,rollingSmoothWindowH:.1,morphStructFrac:.015};
    const op=opAnalyzeStep(App.opTimeHoursFull,App.opEweFull,params);

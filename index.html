@@ -3006,9 +3006,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.12";
+const APP_VERSION = "1.27.13";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.13",date:"2026-11-10",items:["Prefer specific capacity and preserve charge/discharge gaps in Multi-Cell curves and exports."]},
   {version:"1.27.12",date:"2026-11-10",items:["Recover Windows reader dependencies in a fresh verified package directory.","Apply Multi-Cell plot presets, cycles and colors in batches; collapse detailed card settings."]},
   {version:"1.27.11",date:"2026-11-09",items:["Choose which Multi-Cell plot each battery appears in."]},
   {version:"1.27.10",date:"2026-11-09",items:["Set battery colors and filter cycles in Multi-Cell Custom Axes."]},
@@ -4307,12 +4308,12 @@ function collectMultiCellData(){
   if(App.mc.mode==="gcd" || App.mc.mode==="dqdv"){
     App.mc.batteries.forEach((battery,bi)=>{
       if(!mcShouldPlotBattery(battery) || !mcRequiredFieldsOk(battery)) return;
-      const sheet=mcActiveSheetObj(battery), sel=mcEnsureSelectedCycles(battery,bi*4);
-      Object.keys(sel).forEach(rebasedCyc=>{
-        const rawCyc=mcUnrebase(battery,Number(rebasedCyc)), sub=sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===rawCyc), qArr=numCol(sub,battery.mapping.capacity), vArr=numCol(sub,battery.mapping.voltage), clean=pairwiseClean(qArr,vArr);
-        if(App.mc.mode==="gcd") clean[0].forEach((q,i)=>rows.push([battery.name,"Cyc "+rebasedCyc,q,clean[1][i]]));
-        else {const d=computeDqDv(clean[0],clean[1],250,7); d.v.forEach((v,i)=>rows.push([battery.name,"Cyc "+rebasedCyc,v,d.dqdv[i]]));}
-      });
+      for(const {cycle,segments} of mcSelectedCurves(battery,bi)){
+        segments.forEach((segment,index)=>{
+          if(index) rows.push([battery.name,"Cyc "+cycle,null,null]);
+          segment.x.forEach((x,i)=>rows.push([battery.name,"Cyc "+cycle,x,segment.y[i]]));
+        });
+      }
     });
   }else{
     App.mc.batteries.forEach(battery=>{
@@ -4997,7 +4998,11 @@ function mcAutoMapBattery(battery){
   const pointVoltage = sheet.headers.find(header => /^(?:voltage|電壓|电压) v$/.test(mcNorm(header)))
     || sheet.headers.find(header => /^(?:voltage|電壓|电压)$/.test(mcNorm(header)));
   battery.mapping.voltage = pointVoltage || detected.voltage;
-  battery.mapping.capacity = detected.discharge_capacity || detected.capacity;
+  const specific = sheet.headers.filter(header=>/specific capacity|spec cap|比容量/.test(mcNorm(header)));
+  const genericSpecific = specific.find(header=>!/charge|discharge|chg|充|放/.test(mcNorm(header)));
+  battery.mapping.capacity = genericSpecific ||
+    specific.find(header=>/discharge|dchg|放/.test(mcNorm(header))) ||
+    specific[0] || detected.discharge_capacity || detected.capacity;
   // 自訂座標軸模式：全域選的是「物理量」(metric)，不是欄位名稱本身，
   // 每顆電池各自用關鍵字去找符合這個物理量的欄位（欄位名稱可以不一樣，例如 Ewe/V vs Voltage/V）
   ["x","y1","y2"].forEach(k=>{
@@ -5583,6 +5588,48 @@ function mcRenderChart(){
   return mcRenderCustom();
 }
 
+function mcCurveSegments(battery, rows){
+  const headers=mcActiveSheetObj(battery).headers;
+  const detected=autoDetectColumns(headers);
+  const current=detected.current || headers.find(header=>/^(?:<i>|i)\s*\/(?:m?a)$/i.test(String(header).trim()));
+  if(!current){
+    return splitIntoSegments(rows,battery.mapping.capacity,battery.mapping.voltage,detected.step_type);
+  }
+  const segments=[];
+  let group=[], direction;
+  const flush=()=>{
+    const [q,v]=pairwiseClean(numCol(group,battery.mapping.capacity),numCol(group,battery.mapping.voltage));
+    if(q.length) segments.push({q,v});
+    group=[];
+  };
+  for(const row of rows){
+    const value=row[current];
+    const number=value===null || value===undefined || String(value).trim()==="" ? NaN : Number(value);
+    const next=Number.isFinite(number) ? Math.sign(number) : null;
+    if(group.length && next!==direction) flush();
+    direction=next;
+    group.push(row);
+  }
+  flush();
+  return segments;
+}
+
+function mcSelectedCurves(battery,index){
+  const selected=mcEnsureSelectedCycles(battery,index*4);
+  const sheet=mcActiveSheetObj(battery);
+  const groups=rowsBySelectedCycle(sheet.rows,battery.mapping.cycle,Object.keys(selected).map(cycle=>mcUnrebase(battery,Number(cycle))));
+  return Object.entries(selected).map(([cycle,color])=>{
+    const segments=mcCurveSegments(battery,groups.get(mcUnrebase(battery,Number(cycle))));
+    return {cycle,color,segments:segments.map(segment=>{
+      if(App.mc.mode==="dqdv"){
+        const result=computeDqDv(segment.q,segment.v,250,7);
+        return {x:result.v,y:result.dqdv};
+      }
+      return {x:segment.q,y:segment.v};
+    }).filter(segment=>segment.x.length)};
+  });
+}
+
 function mcRenderGcd(){
   const el = document.getElementById("chart-multicell");
   if(!el) return;
@@ -5592,21 +5639,14 @@ function mcRenderGcd(){
   const series = [];
   App.mc.batteries.forEach((battery,bi)=>{
     if(!mcShouldPlotBattery(battery) || !mcRequiredFieldsOk(battery)) return;
-    const sheet = mcActiveSheetObj(battery);
-    const sel = mcEnsureSelectedCycles(battery, bi*4);
-    const groups = rowsBySelectedCycle(sheet.rows, battery.mapping.cycle, Object.keys(sel).map(cycle=>mcUnrebase(battery, Number(cycle))));
-    Object.entries(sel).forEach(([rebasedCyc,color])=>{
-      const rawCyc = mcUnrebase(battery, Number(rebasedCyc));
-      const sub = groups.get(rawCyc);
-      const segments = splitIntoSegments(sub, battery.mapping.capacity, battery.mapping.voltage, null);
-      segments.forEach((seg,i)=>{
-        if(seg.q.length===0) return;
-        const [rq,rv] = decimateForRender(seg.q, seg.v, 1500);
-        const label = i===0 ? (battery.name+" · Cyc "+rebasedCyc) : undefined;
-        if(showLine) series.push({ x:rq, y:rv, color, mode:"line", lineWidth:lw, label: showMarkers?undefined:label });
-        if(showMarkers) series.push({ x:rq, y:rv, color, mode:"scatter", shape:"circle", markerSize:ms, filled:true, label });
+    for(const {cycle,color,segments} of mcSelectedCurves(battery,bi)){
+      segments.forEach((segment,index)=>{
+        const [x,y]=decimateForRender(segment.x,segment.y,1500);
+        const label=index===0 ? battery.name+" · Cyc "+cycle : undefined;
+        if(showLine) series.push({x,y,color,mode:"line",lineWidth:lw,label:showMarkers?undefined:label});
+        if(showMarkers) series.push({x,y,color,mode:"scatter",shape:"circle",markerSize:ms,filled:true,label});
       });
-    });
+    }
   });
   const yAuto = ctrlVal("multicell","y-auto");
   const yDomain = yAuto ? null : [parseFloat(ctrlVal("multicell","y-min")), parseFloat(ctrlVal("multicell","y-max"))];
@@ -5626,21 +5666,14 @@ function mcRenderDqdv(){
   const series = [];
   App.mc.batteries.forEach((battery,bi)=>{
     if(!mcShouldPlotBattery(battery) || !mcRequiredFieldsOk(battery)) return;
-    const sheet = mcActiveSheetObj(battery);
-    const sel = mcEnsureSelectedCycles(battery, bi*4);
-    const groups = rowsBySelectedCycle(sheet.rows, battery.mapping.cycle, Object.keys(sel).map(cycle=>mcUnrebase(battery, Number(cycle))));
-    Object.entries(sel).forEach(([rebasedCyc,color])=>{
-      const rawCyc = mcUnrebase(battery, Number(rebasedCyc));
-      const sub = groups.get(rawCyc);
-      const qArr = numCol(sub, battery.mapping.capacity), vArr = numCol(sub, battery.mapping.voltage);
-      const [qc, vc] = pairwiseClean(qArr, vArr);
-      const { v, dqdv } = computeDqDv(qc, vc, 250, 7);
-      if(v.length===0) return;
-      const [rv, rd] = decimateForRender(v, dqdv, 1500);
-      const label = battery.name+" · Cyc "+rebasedCyc;
-      if(showLine) series.push({ x:rv, y:rd, color, mode:"line", lineWidth:lw, label: showMarkers?undefined:label });
-      if(showMarkers) series.push({ x:rv, y:rd, color, mode:"scatter", shape:"circle", markerSize:ms, filled:true, label });
-    });
+    for(const {cycle,color,segments} of mcSelectedCurves(battery,bi)){
+      segments.forEach((segment,index)=>{
+        const [x,y]=decimateForRender(segment.x,segment.y,1500);
+        const label=index===0 ? battery.name+" · Cyc "+cycle : undefined;
+        if(showLine) series.push({x,y,color,mode:"line",lineWidth:lw,label:showMarkers?undefined:label});
+        if(showMarkers) series.push({x,y,color,mode:"scatter",shape:"circle",markerSize:ms,filled:true,label});
+      });
+    }
   });
   const yAuto = ctrlVal("multicell","y-auto");
   const yDomain = yAuto ? null : [parseFloat(ctrlVal("multicell","y-min")), parseFloat(ctrlVal("multicell","y-max"))];
@@ -6789,13 +6822,14 @@ applyLanguage("en");
           return;
         }
         if(!mcRequiredFieldsOk(battery))return;
-        const sheet=mcActiveSheetObj(battery),selected=mcEnsureSelectedCycles(battery,bi*4);
-        Object.keys(selected).forEach(cycle=>{
-          const sub=sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===mcUnrebase(battery,Number(cycle)));
-          const [q,v]=pairwiseClean(numCol(sub,battery.mapping.capacity),numCol(sub,battery.mapping.voltage));
-          if(App.mc.mode==='gcd')q.forEach((x,i)=>rows.push([name,'Cyc '+cycle,x,v[i],battery.mapping.capacity,battery.mapping.voltage]));
-          else{const d=computeDqDv(q,v,250,7);d.v.forEach((x,i)=>rows.push([name,'Cyc '+cycle,x,d.dqdv[i],battery.mapping.voltage,`dQ/dV [${battery.mapping.capacity} / ${battery.mapping.voltage}]`]));}
-        });
+        const xLabel=App.mc.mode==='gcd'?battery.mapping.capacity:battery.mapping.voltage;
+        const yLabel=App.mc.mode==='gcd'?battery.mapping.voltage:'dQ/dV ['+battery.mapping.capacity+' / '+battery.mapping.voltage+']';
+        for(const {cycle,segments} of mcSelectedCurves(battery,bi)){
+          segments.forEach((segment,index)=>{
+            if(index) rows.push([name,'Cyc '+cycle,null,null,xLabel,yLabel]);
+            segment.x.forEach((x,i)=>rows.push([name,'Cyc '+cycle,x,segment.y[i],xLabel,yLabel]));
+          });
+        }
       });return {headers,rows};
     }
     if(page==='drt')return document.getElementById('drtIntegratedFrame').contentWindow.getEchemDrtCopyData?.()||blank();
@@ -6845,8 +6879,19 @@ applyLanguage("en");
     if(page==='overpotential-sensitivity')plot(1,2,[0]);
     if(page==='drt')plot(6,7,[0,1,2],'line',{logX:true});
     if(page==='multicell'){
+      if(App.mc.mode!=='custom'){
+        const segments=new Map();
+        payload.headers.push('Segment');
+        payload.rows=payload.rows.filter(row=>{
+          const key=JSON.stringify([row[0],row[1]]);
+          const segment=segments.get(key)||0;
+          if(row[2]===null && row[3]===null){segments.set(key,segment+1);return false;}
+          row.push(segment);
+          return true;
+        });
+      }
       const fields=new Map(payload.rows.map(row=>[JSON.stringify([row[4],row[5]]),[row[4],row[5]]]));
-      for(const [xLabel,yLabel] of fields.values())plot(2,3,[0,1],App.mc.mode==='custom'?'scatter':'line',{title:yLabel+' vs '+xLabel,xLabel,yLabel,filter:[{column:4,value:xLabel},{column:5,value:yLabel}]});
+      for(const [xLabel,yLabel] of fields.values())plot(2,3,[0,1],App.mc.mode==='custom'?'scatter':'line',{title:yLabel+' vs '+xLabel,xLabel,yLabel,...(App.mc.mode==='custom'?{}:{segment:6}),filter:[{column:4,value:xLabel},{column:5,value:yLabel}]});
     }
     if(!payload.rows.length)payload.plots=[];
     return payload;

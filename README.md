@@ -8,13 +8,13 @@ NDAX 匯入會從檔名預填活性物質質量，例如 `sample_45_55mg.ndax` �
 
 圖表區使用兩層選單。「循環與性能」包含 GCD、dQ/dV、循環壽命、Retention、CbC Retention、倍率性能與穩態過電位。「EIS / DRT」可切換 Nyquist / EIS 與 DRT。多檔比較集中在「多電池疊圖」。
 
-**單一 HTML 版：[下載 Browser Edition](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem_Plot_Studio_v1.27.12_Browser.html)**。將檔案儲存為 `.html` 並用瀏覽器開啟。支援 TXT、CSV、XLSX 和 XLS，以及圖表和數據拷貝。無需 Python 或本機伺服器。頁面透過網路載入瀏覽器套件，不提供 NDAX 匯入或原生 OPJU 匯出。可用 `python build_standalone_html.py` 從目前版本重新產生。
+**單一 HTML 版：[下載 Browser Edition](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem_Plot_Studio_v1.27.13_Browser.html)**。將檔案儲存為 `.html` 並用瀏覽器開啟。支援 TXT、CSV、XLSX 和 XLS，以及圖表和數據拷貝。無需 Python 或本機伺服器。頁面透過網路載入瀏覽器套件，不提供 NDAX 匯入或原生 OPJU 匯出。可用 `python build_standalone_html.py` 從目前版本重新產生。
 
-**macOS 使用者：[下載 v1.27.12 macOS 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.12-macOS.zip)**
+**macOS 使用者：[下載 v1.27.13 macOS 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.13-macOS.zip)**
 
 解壓縮後，TXT、CSV 和 Excel 可直接用瀏覽器開啟 **index.html**。匯入 NDAX 請先安裝 [Python 3.10 以上](https://www.python.org/downloads/macos/)（建議 Python 3.12），再雙擊 **Start Echem Plot Studio.command**。首次安裝套件需連網，使用時請保持 Terminal 開啟。原生 OPJU 匯出需要 Windows 上已安裝並授權的 Origin。
 
-**Windows 使用者：[下載目前可用的 v1.27.12 Windows 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.12-Windows.zip)**
+**Windows 使用者：[下載目前可用的 v1.27.13 Windows 使用包](https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.13-Windows.zip)**
 
 完整解壓縮 → 雙擊 **Start Echem Plot Studio.cmd** → 首次連網安裝套件 → 使用自動開啟的頁面。需先安裝 Python 3.9 以上。使用包只含目前版本及必要檔案，無須挑選歷史 HTML。
 
@@ -24,7 +24,7 @@ Browser-based electrochemical data visualization and analysis tool for CSV and E
 
 ## Current release
 
-Version **1.27.12** (2026-11-10)
+Version **1.27.13** (2026-11-10)
 
 ## Run the tool
 
@@ -32,7 +32,7 @@ Version **1.27.12** (2026-11-10)
 
 請從 [目前主分支](https://github.com/josh622443-prog/echem-plot-studio/tree/main) 選擇 **Code → Download ZIP**，完整解壓縮後，再雙擊 **Start Echem Plot Studio.cmd**。網址含 `/tree/a5d8d3f...` 的頁面是固定的舊版快照，不會隨主分支更新。
 
-資料夾內的多個 `Echem_Plot_Studio_v*.html` 是保留的歷史版本，不需要逐一開啟。啟動器會開啟目前的 **v1.27.12**；`index.html` 與目前版本內容相同。請保留整個解壓縮資料夾，勿只下載 `.cmd` 或混用舊版檔案。
+資料夾內的多個 `Echem_Plot_Studio_v*.html` 是保留的歷史版本，不需要逐一開啟。啟動器會開啟目前的 **v1.27.13**；`index.html` 與目前版本內容相同。請保留整個解壓縮資料夾，勿只下載 `.cmd` 或混用舊版檔案。
 
 首次啟動需要 Python 3.9 以上與網路，啟動器會將缺少的 NDAX 套件安裝到此資料夾的 `.runtime/python`。2026-11-02 已修正 Windows PowerShell 5.1 在套件檢查遇到 `No module named 'NewareNDA'` 時提前停止、未執行自動安裝的問題。安裝失敗會顯示原因，啟動記錄位於 `%TEMP%\EchemPlotStudio-startup.log`。不用以系統管理員身分開啟。
 
@@ -62,7 +62,7 @@ If automatic clipboard access is denied, a dialog selects the table for manual C
 
 Validation on 2026-10-29: all four package browser tests and six HTTP API tests passed. Copy-specific checks cover all pages/subcharts, selected and computed data, DRT synthetic analysis, precision, effective units (including same-named batteries), TSV quoting, empty states, localization, and manual fallback. A local NDAX import also verified full-resolution selected-curve copying and the existing palette fix. Clipboard writes were simulated during testing so the user's clipboard was preserved; no research input/output is distributed.
 
-Download `index.html` or `Echem_Plot_Studio_v1.27.12.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
+Download `index.html` or `Echem_Plot_Studio_v1.27.13.html` and open it in a modern desktop browser. These files contain the same application. An internet connection is required when the page first loads because third-party browser libraries and fonts are loaded from CDNs.
 
 Supported directly in the browser:
 
@@ -72,7 +72,7 @@ Supported directly in the browser:
 
 For `.ndax` import on Windows, download the whole repository and double-click **`Start Echem Plot Studio.cmd`**. Keep its command window open and use the page it opens at `http://127.0.0.1:8765/`. The optional Python reader (`ndax_reader.py`) uses [NewareNDA](https://github.com/d-cogswell/NewareNDA); Python 3.9+ is required. First setup installs `requirements_ndax.txt` into `.runtime/python`. This reader does not use the legacy compiled executable or NEWARE vendor DLLs. See `README-FIRST.txt`.
 
-Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.27.12 interface is used by both entry methods.
+Directly opening an HTML file or using static GitHub Pages supports CSV/Excel but cannot run the NDAX parser. The same v1.27.13 interface is used by both entry methods.
 
 Python add-on validation (2026-10-29): six conversion tests and six HTTP bridge tests passed. A locally held NDAX file was also imported through the actual launcher in Edge, retaining all source records and rendering retention and GCD charts without browser errors. The research file is not distributed. Existing Custom Axes and CSV upload browser tests were rerun and passed.
 
@@ -149,3 +149,8 @@ or open Detailed settings to adjust its sheet, columns, name and plot assignment
 Axes & units and numerical diagnostics can also be expanded when needed.
 The cycle/capacity preset requires a table with one row per cycle and an explicit
 discharge-capacity column. Missing mappings are listed for manual review.
+
+Multi-Cell voltage/capacity plots prefer a generic specific-capacity column.
+Charging and discharging are split using current direction, or the available
+step column. Clipboard tables and CSV/combined Excel add blank X/Y cells
+between segments, and Origin payloads retain the same segment boundaries.

@@ -81,13 +81,14 @@
           return;
         }
         if(!mcRequiredFieldsOk(battery))return;
-        const sheet=mcActiveSheetObj(battery),selected=mcEnsureSelectedCycles(battery,bi*4);
-        Object.keys(selected).forEach(cycle=>{
-          const sub=sheet.rows.filter(r=>Number(r[battery.mapping.cycle])===mcUnrebase(battery,Number(cycle)));
-          const [q,v]=pairwiseClean(numCol(sub,battery.mapping.capacity),numCol(sub,battery.mapping.voltage));
-          if(App.mc.mode==='gcd')q.forEach((x,i)=>rows.push([name,'Cyc '+cycle,x,v[i],battery.mapping.capacity,battery.mapping.voltage]));
-          else{const d=computeDqDv(q,v,250,7);d.v.forEach((x,i)=>rows.push([name,'Cyc '+cycle,x,d.dqdv[i],battery.mapping.voltage,`dQ/dV [${battery.mapping.capacity} / ${battery.mapping.voltage}]`]));}
-        });
+        const xLabel=App.mc.mode==='gcd'?battery.mapping.capacity:battery.mapping.voltage;
+        const yLabel=App.mc.mode==='gcd'?battery.mapping.voltage:'dQ/dV ['+battery.mapping.capacity+' / '+battery.mapping.voltage+']';
+        for(const {cycle,segments} of mcSelectedCurves(battery,bi)){
+          segments.forEach((segment,index)=>{
+            if(index) rows.push([name,'Cyc '+cycle,null,null,xLabel,yLabel]);
+            segment.x.forEach((x,i)=>rows.push([name,'Cyc '+cycle,x,segment.y[i],xLabel,yLabel]));
+          });
+        }
       });return {headers,rows};
     }
     if(page==='drt')return document.getElementById('drtIntegratedFrame').contentWindow.getEchemDrtCopyData?.()||blank();
@@ -137,8 +138,19 @@
     if(page==='overpotential-sensitivity')plot(1,2,[0]);
     if(page==='drt')plot(6,7,[0,1,2],'line',{logX:true});
     if(page==='multicell'){
+      if(App.mc.mode!=='custom'){
+        const segments=new Map();
+        payload.headers.push('Segment');
+        payload.rows=payload.rows.filter(row=>{
+          const key=JSON.stringify([row[0],row[1]]);
+          const segment=segments.get(key)||0;
+          if(row[2]===null && row[3]===null){segments.set(key,segment+1);return false;}
+          row.push(segment);
+          return true;
+        });
+      }
       const fields=new Map(payload.rows.map(row=>[JSON.stringify([row[4],row[5]]),[row[4],row[5]]]));
-      for(const [xLabel,yLabel] of fields.values())plot(2,3,[0,1],App.mc.mode==='custom'?'scatter':'line',{title:yLabel+' vs '+xLabel,xLabel,yLabel,filter:[{column:4,value:xLabel},{column:5,value:yLabel}]});
+      for(const [xLabel,yLabel] of fields.values())plot(2,3,[0,1],App.mc.mode==='custom'?'scatter':'line',{title:yLabel+' vs '+xLabel,xLabel,yLabel,...(App.mc.mode==='custom'?{}:{segment:6}),filter:[{column:4,value:xLabel},{column:5,value:yLabel}]});
     }
     if(!payload.rows.length)payload.plots=[];
     return payload;
