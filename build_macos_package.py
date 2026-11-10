@@ -3,12 +3,12 @@ from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parent
-VERSION = "1.27.11"
+VERSION = "1.27.12"
 HTML = f"Echem_Plot_Studio_v{VERSION}.html"
 LAUNCHER = "Start Echem Plot Studio.command"
 FILES = (
     "index.html", HTML, "data-copy.js", LAUNCHER, "START-MACOS.txt",
-    "ndax_reader.py", "mpr_reader.py", "ndax_api_server.py", "requirements_ndax.txt",
+    "runtime_packages.py", "requirements_ndax_reader.txt", "ndax_reader.py", "mpr_reader.py", "ndax_api_server.py", "requirements_ndax.txt",
     "origin_export.py", "LICENSE", "THIRD-PARTY-NOTICES.md", "CITATION.cff",
 )
 

@@ -5,6 +5,7 @@ const browser=await chromium.launch({executablePath:process.env.BROWSER_PATH || 
 const page=await browser.newPage({viewport:{width:1500,height:1050}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
 await page.goto('file:///'+path.resolve('Echem_Plot_Studio_v'+require('./package.json').version+'.html').replace(/\\/g,'/'));
 await page.locator('.tabbtn[data-tab="multicell"]').click();await page.locator('[data-mcmode="custom"]').click();
+await page.locator('#mcAdvancedAxes summary').click();
 await page.locator('#controls-multicell [data-role="x-metric"]').selectOption('time');
 await page.locator('#controls-multicell [data-role="x-unit"]').selectOption('h');
 await page.locator('#controls-multicell [data-role="y1-metric"]').selectOption('voltage');

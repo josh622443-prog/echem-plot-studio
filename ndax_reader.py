@@ -12,9 +12,9 @@ from pathlib import Path
 import sys
 import zipfile
 
-LOCAL_PACKAGES = Path(__file__).resolve().parent / '.runtime' / 'python'
-if LOCAL_PACKAGES.is_dir():
-    sys.path.insert(0, str(LOCAL_PACKAGES))
+from runtime_packages import activate_packages
+
+LOCAL_PACKAGES = activate_packages()
 
 
 def check_dependencies():

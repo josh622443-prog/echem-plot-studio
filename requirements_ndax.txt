@@ -1,3 +1,2 @@
-NewareNDA==2026.6.11
+-r requirements_ndax_reader.txt
 pandas>=1.5,<4
-xmltodict==1.0.4

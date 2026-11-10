@@ -1,10 +1,10 @@
-ECHEM PLOT STUDIO v1.27.11 - PYTHON NDAX ADD-ON
+ECHEM PLOT STUDIO v1.27.12 - PYTHON NDAX ADD-ON
 ================================================
 
 Start
 -----
 Recommended Windows runtime ZIP (current files only):
-https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.11-Windows.zip
+https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.12-Windows.zip
 The v1.24.7 GitHub Release and /tree/300da08... snapshots are older than the
 2026-11-02 Windows startup fix. Use the current download or main branch.
 
@@ -13,7 +13,7 @@ https://github.com/josh622443-prog/echem-plot-studio/tree/main
 Use Code > Download ZIP, then extract the entire ZIP before starting.
 Historical Echem_Plot_Studio_v*.html and baseline*.html files are retained in
 the source repository. They are not separate installations. The launcher opens
-the current v1.27.11 automatically; index.html is its identical current entry.
+the current v1.27.12 automatically; index.html is its identical current entry.
 Do not mix launcher/server files from different snapshots.
 
 Double-click "Start Echem Plot Studio.cmd" and use the page it opens at
@@ -26,7 +26,9 @@ Opening the HTML directly still supports CSV/Excel, but not the NDAX API.
 Requirements
 ------------
 Python 3.9 or newer. The launcher looks for an installed Python and installs
-requirements_ndax.txt into this folder's .runtime/python on first use.
+the NDAX readers into a new .runtime/packages-* folder when recovery is needed.
+Working system numerical libraries are reused when available. Each Python
+interpreter uses its verified .runtime/active-*.txt selection.
 First setup needs internet and a writable package folder. Parsing is local.
 Missing NewareNDA on the first dependency check triggers automatic setup.
 The launcher handles Windows PowerShell 5.1 stderr without stopping that setup.

@@ -58,25 +58,43 @@ Write-Stage 'Checking Python...'
 $python = Find-Python
 Write-Stage "Python: $python"
 $reader = Join-Path $root 'ndax_reader.py'
-$runtimePackages = Join-Path $root '.runtime\\python'
 $probeExit = Invoke-PythonLogged -Executable $python -Arguments @($reader, '--check') -Quiet
-if ($probeExit -ne 0) {
-  Write-Stage 'Installing local NDAX dependencies (first start requires internet)...'
-  $installExit = Invoke-PythonLogged -Executable $python -Arguments @('-m', 'pip', 'install', '--target', $runtimePackages, '--upgrade', '--disable-pip-version-check', '-r', (Join-Path $root 'requirements_ndax.txt'))
-  if ($installExit -ne 0) { throw "NDAX dependency installation failed. Check the internet connection and Python installation. Details: $startupLog" }
-  $probeExit = Invoke-PythonLogged -Executable $python -Arguments @($reader, '--check')
-  if ($probeExit -ne 0) { throw "NDAX dependencies could not be loaded. Details: $startupLog" }
+$mprProbe = 0
+if (-not $CheckOnly) {
+  $mprProbe = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'mpr_reader.py'), '--check') -Quiet
+}
+if ($probeExit -ne 0 -or $mprProbe -ne 0) {
+  Write-Stage 'Installing local NDAX dependencies into a new package folder...'
+  $runtimePackages = Join-Path (Join-Path $root '.runtime') ('packages-' + [Guid]::NewGuid().ToString('N'))
+  New-Item -ItemType Directory -Path $runtimePackages -ErrorAction Stop | Out-Null
+  $previousRuntime = $env:ECHEM_RUNTIME_PACKAGES
+  try {
+    $env:ECHEM_RUNTIME_PACKAGES = $runtimePackages
+    # Reuse working numerical libraries before downloading another binary build.
+    $baseProbe = Invoke-PythonLogged -Executable $python -Arguments @('-c', 'import pandas,numpy; v=tuple(map(int,pandas.__version__.split(chr(46))[:2])); assert (1,5)<=v<(4,0)') -Quiet
+    $requirements = if ($baseProbe -eq 0) { 'requirements_ndax_reader.txt' } else { 'requirements_ndax.txt' }
+    $pipArgs = @('-m', 'pip', 'install', '--target', $runtimePackages, '--no-compile', '--disable-pip-version-check', '-r', (Join-Path $root $requirements))
+    if ($baseProbe -eq 0) { $pipArgs += '--no-deps' }
+    $installExit = Invoke-PythonLogged -Executable $python -Arguments $pipArgs
+    if ($installExit -ne 0) { throw "NDAX dependency installation failed. See the installation error in $startupLog" }
+    $probeExit = Invoke-PythonLogged -Executable $python -Arguments @($reader, '--check')
+    if ($probeExit -ne 0) { throw "The new NDAX packages could not be loaded. Windows application control may have blocked a module. Details: $startupLog" }
+    if (-not $CheckOnly) {
+      Write-Stage 'Installing optional EC-Lab MPR reader...'
+      $mprInstall = Invoke-PythonLogged -Executable $python -Arguments @('-m', 'pip', 'install', '--target', $runtimePackages, '--no-deps', '--no-compile', '--disable-pip-version-check', 'datalab-org-galvani==0.6.0')
+      $mprProbe = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'mpr_reader.py'), '--check')
+      if ($mprInstall -ne 0 -or $mprProbe -ne 0) { Write-Stage 'MPR reader unavailable. Other formats can still be opened.' }
+    }
+    $activateExit = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'runtime_packages.py'), '--activate', $runtimePackages) -Quiet
+    if ($activateExit -ne 0) { throw "Could not save the verified package location. Details: $startupLog" }
+  } finally {
+    $env:ECHEM_RUNTIME_PACKAGES = $previousRuntime
+  }
 }
 if ($CheckOnly) { Write-Stage 'Python NDAX reader is ready.'; return }
-$mprProbe = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'mpr_reader.py'), '--check') -Quiet
-if ($mprProbe -ne 0) {
-  Write-Stage 'Installing optional EC-Lab MPR reader...'
-  $mprInstall = Invoke-PythonLogged -Executable $python -Arguments @('-m', 'pip', 'install', '--target', $runtimePackages, '--no-deps', '--disable-pip-version-check', 'datalab-org-galvani==0.6.0')
-  $mprProbe = Invoke-PythonLogged -Executable $python -Arguments @((Join-Path $root 'mpr_reader.py'), '--check') -Quiet
-  if ($mprInstall -ne 0 -or $mprProbe -ne 0) { Write-Stage 'MPR reader unavailable. Other formats can still be opened.' }
-}
+
 function Test-CurrentServer($status) {
-  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.11' -and $status.root -eq $root
+  return $status -and $status.ok -and $status.reader -eq 'newarenda-python' -and $status.service -eq 'ndax-api' -and $status.version -eq '1.27.12' -and $status.root -eq $root
 }
 $chosenPort = $null
 foreach ($candidatePort in $Port..([Math]::Min(65535,$Port+20))) {

@@ -1,0 +1,2 @@
+NewareNDA==2026.6.11
+xmltodict==1.0.4

@@ -880,12 +880,32 @@
         </div>
       </div>
       <div class="control-panel" id="controls-multicell">
+        <div class="ctrl-section" id="mcQuickSetup">
+          <h4 data-i18n="mc_quick_title">Quick setup</h4>
+          <div class="ctrl-row"><label data-i18n="mc_quick_preset">Preset</label><select id="mcQuickPreset">
+            <option value="capacity-voltage" data-i18n="mc_quick_qv">Capacity vs voltage</option>
+            <option value="time-voltage" data-i18n="mc_quick_tv">Time vs voltage</option>
+            <option value="cycle-capacity" data-i18n="mc_quick_cycle">Cycle vs discharge capacity</option>
+          </select></div>
+          <button type="button" class="btn" id="mcApplyPreset" data-i18n="mc_quick_apply">Apply to enabled batteries</button>
+          <div class="ctrl-row" style="margin-top:10px;"><label data-i18n="mc_cycle_select">Cycles shown</label><input id="mcSharedCycles" type="text" placeholder="1,5,10-20"></div>
+          <div class="btn-row">
+            <button type="button" class="btn" id="mcApplyCycles" data-i18n="mc_quick_cycles">Apply cycles</button>
+            <button type="button" class="btn" id="mcAutoColors" data-i18n="mc_quick_colors">Auto colors</button>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn" id="mcCollapseCards" data-i18n="mc_quick_collapse">Collapse all</button>
+            <button type="button" class="btn" id="mcExpandCards" data-i18n="mc_quick_expand">Expand all</button>
+          </div>
+          <p id="mcQuickStatus" class="chk-row" role="status" aria-live="polite"></p>
+        </div>
         <div class="ctrl-section" id="mcCustomAxesSection" style="display:none;">
-          <h4 data-i18n="mc_section_axes">座標軸與單位</h4>
+          <details id="mcAdvancedAxes"><summary data-i18n="mc_section_axes">座標軸與單位</summary>
           <div class="mc-axis-grid"><span class="mc-axis-tag">X</span><select data-role="x-metric"></select><select data-role="x-unit"></select></div>
           <div class="mc-axis-grid"><span class="mc-axis-tag">Y1</span><select data-role="y1-metric"></select><select data-role="y1-unit"></select></div>
           <div class="mc-axis-grid"><span class="mc-axis-tag">Y2</span><select data-role="y2-metric"><option value="" data-i18n="mc_none">－</option></select><select data-role="y2-unit"></select></div>
           <div class="chk-row" data-i18n="mc_hint_custom_axes">選一個「物理量」（例如電壓、電流、時間），系統會自動在每顆電池的資料裡找對應欄位，並依你選的單位換算；換算不了的話（例如 mAh/g 換不成 mAh，缺質量資訊）會照實顯示原始單位，不會硬換。</div>
+          </details>
         </div>
         <div class="ctrl-section">
           <h4 data-i18n="mc_section_files">電池檔案</h4>
@@ -1910,6 +1930,20 @@ const TRANSLATIONS = {
     mc_enabled: "啟用",
     mc_battery_name: "電池名稱",
     mc_battery_plot: "顯示於",
+    mc_quick_title: "快速設定",
+    mc_quick_preset: "繪圖範本",
+    mc_quick_qv: "容量－電壓",
+    mc_quick_tv: "時間－電壓",
+    mc_quick_cycle: "圈數－放電容量（循環統計）",
+    mc_quick_apply: "套用到啟用的電池",
+    mc_quick_cycles: "套用圈數",
+    mc_quick_colors: "自動配色",
+    mc_quick_collapse: "收合全部",
+    mc_quick_expand: "展開全部",
+    mc_quick_details: "詳細設定",
+    mc_quick_diagnostics: "數據檢查",
+    mc_quick_done: "已套用 {n} 顆電池。",
+    mc_quick_missing: "需要確認欄位或單位：{names}",
     mc_plot_default: "預設（跟隨上方圖表）",
     mc_upload_replace: "上傳／替換檔案",
     mc_remove: "移除",
@@ -2277,6 +2311,20 @@ const TRANSLATIONS = {
     mc_enabled: "启用",
     mc_battery_name: "电池名称",
     mc_battery_plot: "显示于",
+    mc_quick_title: "快速设置",
+    mc_quick_preset: "绘图模板",
+    mc_quick_qv: "容量－电压",
+    mc_quick_tv: "时间－电压",
+    mc_quick_cycle: "圈数－放电容量（循环统计）",
+    mc_quick_apply: "应用到启用的电池",
+    mc_quick_cycles: "应用圈数",
+    mc_quick_colors: "自动配色",
+    mc_quick_collapse: "收起全部",
+    mc_quick_expand: "展开全部",
+    mc_quick_details: "详细设置",
+    mc_quick_diagnostics: "数据检查",
+    mc_quick_done: "已应用 {n} 个电池。",
+    mc_quick_missing: "需要确认列或单位：{names}",
     mc_plot_default: "默认（跟随上方图表）",
     mc_upload_replace: "上传／替换文件",
     mc_remove: "移除",
@@ -2644,6 +2692,20 @@ const TRANSLATIONS = {
     mc_enabled: "Enabled",
     mc_battery_name: "Battery name",
     mc_battery_plot: "Plot",
+    mc_quick_title: "Quick setup",
+    mc_quick_preset: "Preset",
+    mc_quick_qv: "Capacity vs voltage",
+    mc_quick_tv: "Time vs voltage",
+    mc_quick_cycle: "Cycle vs capacity",
+    mc_quick_apply: "Apply to enabled batteries",
+    mc_quick_cycles: "Apply cycles",
+    mc_quick_colors: "Auto colors",
+    mc_quick_collapse: "Collapse all",
+    mc_quick_expand: "Expand all",
+    mc_quick_details: "Detailed settings",
+    mc_quick_diagnostics: "Data checks",
+    mc_quick_done: "Applied to {n} batteries.",
+    mc_quick_missing: "Check columns or units for: {names}",
     mc_plot_default: "Default (follow active plot)",
     mc_upload_replace: "Upload / replace file",
     mc_remove: "Remove",
@@ -2944,9 +3006,10 @@ document.getElementById("langSwitch").addEventListener("click", (e)=>{
 /* =========================================================
    3.6 版本資訊與更新日誌
    ========================================================= */
-const APP_VERSION = "1.27.11";
+const APP_VERSION = "1.27.12";
 document.getElementById("appTitleVersion").textContent = "v" + APP_VERSION;
 const CHANGELOG = [
+  {version:"1.27.12",date:"2026-11-10",items:["Recover Windows reader dependencies in a fresh verified package directory.","Apply Multi-Cell plot presets, cycles and colors in batches; collapse detailed card settings."]},
   {version:"1.27.11",date:"2026-11-09",items:["Choose which Multi-Cell plot each battery appears in."]},
   {version:"1.27.10",date:"2026-11-09",items:["Set battery colors and filter cycles in Multi-Cell Custom Axes."]},
   {version:"1.27.9",date:"2026-11-09",items:["Load the locally installed EC-Lab MPR reader from the Windows launcher package."]},
@@ -4909,6 +4972,7 @@ function mcParseFile(battery, file, ndaxMass){
 
 function mcFinishBatteryLoad(battery){
   battery.status = "loaded";
+  battery.open = false;
   mcAutoMapBattery(battery);
   if(App.mc.mode==="custom") mcPopulateCustomAxisOptions();
   mcRenderBatteryList();
@@ -5261,7 +5325,9 @@ function mcBatteryCardHtml(battery, index){
     <span class="mc-battery-state ${mcIsReady(battery)?"ok":battery.status==="failed"?"warn":""}">${esc(mcStatusLabel(battery))}</span>
     <span class="mc-chevron">⌄</span>
   </div>`;
-  html += `<div class="mc-battery-body">`;
+  html += '<div class="mc-battery-body">';
+  const bodyStart = html.length;
+  let quickControls = "";
   html += `<div class="ctrl-row"><label>${esc(t("mc_battery_name"))}</label><input type="text" data-mcaction="name" value="${esc(battery.name)}"></div>`;
   html += `<div class="ctrl-row"><label></label><div style="display:flex;gap:6px;width:100%;">
     <label class="btn small" style="flex:1;text-align:center;cursor:pointer;">${esc(t("mc_upload_replace"))}<input type="file" data-mcaction="file" accept=".mpr,.mpt,.cex,.csv,.txt,.xlsx,.xls" style="display:none"></label>
@@ -5292,14 +5358,14 @@ function mcBatteryCardHtml(battery, index){
         });
         html += `</select></div>`;
       });
-      html += '<div class="ctrl-row"><label>' + esc(t("mc_custom_color")) + '</label><input type="color" data-mcaction="custom-color" aria-label="' + esc(t("mc_custom_color")) + '" value="' + esc(battery.color) + '"></div>';
+      quickControls += '<div class="ctrl-row"><label>' + esc(t("mc_custom_color")) + '</label><input type="color" data-mcaction="custom-color" aria-label="' + esc(t("mc_custom_color")) + '" value="' + esc(battery.color) + '"></div>';
       html += '<div class="ctrl-row"><label>' + esc(t("label_meas_col")) + '</label><select data-mcaction="map-cycle" aria-label="' + esc(t("label_meas_col")) + '"><option value="">－</option>';
       sheet.headers.forEach(h=>{
         html += '<option value="' + esc(h) + '"' + (battery.mapping.cycle===h ? ' selected' : '') + '>' + esc(h) + '</option>';
       });
       html += '</select></div>';
       if(battery.mapping.cycle){
-        html += '<div class="ctrl-row"><label>' + esc(t("mc_cycle_select")) + '</label><input type="text" data-mcaction="custom-cycle-spec" aria-label="' + esc(t("mc_cycle_select")) + '" placeholder="' + esc(t("mc_custom_cycle_hint")) + '" value="' + esc(battery.customCycleSpec||"") + '"></div>';
+        quickControls += '<div class="ctrl-row"><label>' + esc(t("mc_cycle_select")) + '</label><input type="text" data-mcaction="custom-cycle-spec" aria-label="' + esc(t("mc_cycle_select")) + '" placeholder="' + esc(t("mc_custom_cycle_hint")) + '" value="' + esc(battery.customCycleSpec||"") + '"></div>';
       }
     } else {
       [["cycle","label_meas_col"],["voltage","label_voltage_col"],["capacity","mc_col_capacity"]].forEach(([k,labelKey])=>{
@@ -5329,7 +5395,14 @@ function mcBatteryCardHtml(battery, index){
       }
     }
   }
-  html += `</div></article>`;
+  if(App.mc.mode==="custom"){
+    const axes = [battery.mapping.x,battery.mapping.y1,battery.mapping.y2].filter(Boolean).map(esc).join(" / ");
+    html = html.slice(0,bodyStart) + quickControls +
+      '<p class="chk-row" style="overflow-wrap:anywhere;">' + axes + '</p>' +
+      '<details data-mcaction="details"' + ((battery.detailsOpen||warning)?' open':'') + '><summary>' +
+      esc(t("mc_quick_details")) + '</summary>' + html.slice(bodyStart) + '</details>';
+  }
+  html += '</div></article>';
   return html;
 }
 
@@ -5358,6 +5431,8 @@ function mcWireBatteryCards(){
       battery.enabled = e.target.checked;
       mcRenderChart();
     });
+    const details = card.querySelector('[data-mcaction="details"]');
+    if(details) details.addEventListener("toggle", ()=>{ if(details.isConnected) battery.detailsOpen = details.open; });
     const plotSelect = card.querySelector('[data-mcaction="plot"]');
     plotSelect.addEventListener("change", ()=>{
       battery.plotMode = plotSelect.value;
@@ -5484,15 +5559,17 @@ function mcPopulateCustomAxisOptions(){
   App.mc.batteries.forEach(b=>{ if(mcIsReady(b)) mcAutoMapBattery(b); });
 }
 
-function mcSetMode(mode){
+function mcSetMode(mode, render = true){
   App.mc.mode = mode;
-  const status=document.getElementById("mcCustomDiagnostics"); if(status) status.hidden=mode!=="custom";
+  const status=document.getElementById("mcCustomDiagnostics"); if(status){ status.hidden=mode!=="custom"; const details=status.closest("details"); if(details) details.hidden=mode!=="custom"; }
   document.querySelectorAll(".mc-mode-btn").forEach(b=>b.classList.toggle("active", b.dataset.mcmode===mode));
   document.getElementById("mcCustomAxesSection").style.display = mode==="custom" ? "" : "none";
   App.mc.batteries.forEach(b=>{ if(mcIsReady(b)) mcAutoMapBattery(b); });
   if(mode==="custom") mcPopulateCustomAxisOptions();
-  mcRenderBatteryList();
-  mcRenderChart();
+  if(render){
+    mcRenderBatteryList();
+    mcRenderChart();
+  }
 }
 
 function mcPlotStyleFlags(){
@@ -5664,8 +5741,15 @@ function mcRenderCustom(){
   el.innerHTML = svg;
   let status=document.getElementById("mcCustomDiagnostics");
   if(!status){ status=document.createElement("p"); status.id="mcCustomDiagnostics"; status.setAttribute("role","status"); el.after(status); }
-  status.hidden=false;
+  status.hidden=false; if(status.closest("details")) status.closest("details").hidden=false;
   status.textContent=diagnostics.join(" | ") || "No enabled, loaded batteries.";
+  if(status.parentElement.tagName!=="DETAILS"){
+    const details=document.createElement("details");
+    const summary=document.createElement("summary");
+    summary.textContent=t("mc_quick_diagnostics");
+    status.before(details);
+    details.append(summary,status);
+  }
 }
 
 function mcDownloadCsv(){
@@ -5699,6 +5783,86 @@ function mcLoadDemoData(){
   App.mc.batteries.push(makeDemoBattery("Demo Cell B", {1:175,2:174,50:160,100:150}, PALETTE[1]));
 }
 
+function mcApplyQuickPreset(){
+  const preset=document.getElementById("mcQuickPreset").value;
+  const cycling=preset==="cycle-capacity";
+  const xMetric=cycling ? "cycle" : preset==="time-voltage" ? "time" : "capacity";
+  const yMetric=cycling ? "discharge_capacity" : "voltage";
+  App.mc.customAxes={
+    x:{metric:xMetric,unit:cycling?"cycle":preset==="time-voltage"?"h":"mAh/g"},
+    y1:{metric:yMetric,unit:cycling?"mAh/g":"V"},
+    y2:{metric:null,unit:null},
+  };
+  mcSetMode("custom", false);
+  let applied=0;
+  const missing=[];
+  const capacityUnits={x:null,y1:null};
+  for(const battery of App.mc.batteries){
+    if(!battery.enabled || !mcIsReady(battery)) continue;
+    const candidates=[...battery.sheetNames];
+    const record=mcFindRecordSheet(candidates);
+    if(record && !cycling){
+      candidates.splice(candidates.indexOf(record),1);
+      candidates.unshift(record);
+    }
+    let found=false;
+    for(const name of candidates){
+      const sheet=battery.sheets[name];
+      if(!sheet) continue;
+      const detected=autoDetectColumns(sheet.headers);
+      const x=mcDetectMetricColumn(sheet.headers,xMetric) || detected[xMetric] || (xMetric==="capacity" ? detected.specific_capacity : null);
+      const y=mcDetectMetricColumn(sheet.headers,yMetric) || detected[yMetric];
+      if(!x || !y) continue;
+      const axes=[["x",x,xMetric],["y1",y,yMetric]];
+      if(axes.some(([axis,column,metric])=>{
+        if(!["capacity","discharge_capacity"].includes(metric)) return false;
+        const source=mcUnitFromHeader(column);
+        const target=capacityUnits[axis] || source;
+        return Boolean(source && target && !mcUnitConvertible(source,target));
+      })) continue;
+      if(cycling){
+        // A cycle summary contains a single row per cycle.
+        const cycles=distinctCycles(sheet.rows,x);
+        if(!cycles.length || cycles.length!==sheet.rows.length) continue;
+      }
+      for(const [axis,column,metric] of axes){
+        if(!["capacity","discharge_capacity"].includes(metric)) continue;
+        const unit=mcUnitFromHeader(column);
+        if(unit && !capacityUnits[axis]){
+          capacityUnits[axis]=unit;
+          App.mc.customAxes[axis].unit=unit;
+        }
+      }
+      battery.activeSheet=name;
+      mcAutoMapBattery(battery);
+      battery.mapping.x=x;
+      battery.mapping.y1=y;
+      battery.mapping.y2=null;
+      battery.plotMode="default";
+      battery.customCycleSpec=document.getElementById("mcSharedCycles").value.trim();
+      battery.open=false;
+      battery.detailsOpen=false;
+      found=true;
+      applied++;
+      break;
+    }
+    if(!found){
+      battery.mapping.x=null;
+      battery.mapping.y1=null;
+      battery.open=true;
+      battery.detailsOpen=true;
+      missing.push(battery.name);
+    }
+  }
+  mcRenderBatteryList();
+  mcRenderChart();
+  for(const axis of ["x","y1"]){
+    const config=App.mc.customAxes[axis];
+    mcPopulateUnitSelect(document.querySelector('#mcCustomAxesSection [data-role="'+axis+'-unit"]'),config.metric,config.unit);
+  }
+  document.getElementById("mcQuickStatus").textContent=t("mc_quick_done",{n:applied})+
+    (missing.length?" "+t("mc_quick_missing",{names:missing.join(", ")}):"");
+}
 function initMultiCellTab(){
   document.querySelectorAll(".mc-mode-btn").forEach(btn=>{
     btn.addEventListener("click", ()=> mcSetMode(btn.dataset.mcmode));
@@ -5713,6 +5877,36 @@ function initMultiCellTab(){
     dz.addEventListener("drop", e=>{
       e.preventDefault(); dz.classList.remove("dragover");
       if(e.dataTransfer.files.length) mcAddFiles(e.dataTransfer.files);
+    });
+  }
+  document.getElementById("mcApplyPreset").addEventListener("click",mcApplyQuickPreset);
+  document.getElementById("mcApplyCycles").addEventListener("click",()=>{
+    const spec=document.getElementById("mcSharedCycles").value.trim();
+    let applied=0;
+    for(const battery of App.mc.batteries){
+      if(!battery.enabled || !mcIsReady(battery) || !battery.mapping.cycle) continue;
+      if(App.mc.mode==="custom") battery.customCycleSpec=spec;
+      else { battery.cycleSpec=spec; battery.selectedCycles=null; }
+      applied++;
+    }
+    mcRenderBatteryList();mcRenderChart();
+    document.getElementById("mcQuickStatus").textContent=t("mc_quick_done",{n:applied});
+  });
+  document.getElementById("mcAutoColors").addEventListener("click",()=>{
+    let index=0;
+    for(const battery of App.mc.batteries){
+      if(!battery.enabled) continue;
+      battery.color=PALETTE[index++%PALETTE.length];
+      if(App.mc.mode!=="custom" && battery.selectedCycles){
+        for(const cycle of Object.keys(battery.selectedCycles)) battery.selectedCycles[cycle]=battery.color;
+      }
+    }
+    mcRenderBatteryList();mcRenderChart();
+  });
+  for(const [id,open] of [["mcCollapseCards",false],["mcExpandCards",true]]){
+    document.getElementById(id).addEventListener("click",()=>{
+      App.mc.batteries.forEach(battery=>{ battery.open=open; });
+      mcRenderBatteryList();
     });
   }
   const addBtn = document.getElementById("mcAddEmptyBattery");
@@ -5740,7 +5934,7 @@ function initMultiCellTab(){
   });
   const panel = document.getElementById("controls-multicell");
   if(panel) panel.querySelectorAll('input,select').forEach(el=>{
-    if(el.closest("#mcCustomAxesSection")) return; // 上面已經個別綁定
+    if(el.closest("#mcCustomAxesSection") || el.closest("#mcQuickSetup")) return; // 上面已經個別綁定
     el.addEventListener("input", ()=>{ syncAxisDisabled("multicell"); syncRangeLabels("multicell"); mcRenderChart(); });
   });
   syncAxisDisabled("multicell");
