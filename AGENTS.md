@@ -1,6 +1,6 @@
 # Echem Plot Studio
 
-Maintain this plotting tool independently from OM-ECHEM-Video-Generator. Preserve the original license and citation notices. Keep `index.html` identical to `Echem_Plot_Studio_v1.27.13.html` (or the current versioned HTML after a release). Run the package's two browser test scripts for changes to plotting or data import. Historical reports are not new validation; do not claim full DRT or application regression coverage from Custom Axes tests.
+Maintain this plotting tool independently from OM-ECHEM-Video-Generator. Preserve the original license and citation notices. Keep `index.html` identical to `Echem_Plot_Studio_v1.27.14.html` (or the current versioned HTML after a release). Run the package's two browser test scripts for changes to plotting or data import. Historical reports are not new validation; do not claim full DRT or application regression coverage from Custom Axes tests.
 
 The user authorizes automatic commits and uploads after each completed update and applicable validation to `josh622443-prog/echem-plot-studio`, branch `main`. Do not ask again for routine uploads. Preserve existing remote history and unrelated files, never force-push, and upload only scoped code, documentation, and synthetic fixtures; never upload selected research data or credentials. Verify the remote head and report the pushed commit.
 
@@ -11,3 +11,5 @@ NDAX imports use `ndax_reader.py` (NewareNDA) through `ndax_api_server.py`; the 
 Default clipboard export is independent cycle X/Y pairs, with segment gaps and blank padding; preserve the long-table and optional-header controls. Native OPJU export uses `origin_export.py` and Origin's documented command-line/embedded Python interface, without COM registration changes. Validate grouping with `test_origin_export.py` and verify actual native projects by reopening them in Origin when modifying the native writer. Keep local `origin_executable.txt` and all generated OPJU files out of routine source commits.
 
 When adding or changing user-facing features, check existing entry points for overlapping capabilities and report meaningful overlap to the user. Distinguish duplicate entry points from workflows with different scope, and get explicit direction before removing either.
+
+`battery-register.js` is the canonical source for inline `batteryRegisterV1`. Keep the inline bytes identical and run `battery-register-test.cjs` for register calculation changes. Unknown process metadata must remain blank; filename pressure is an unconfirmed hint. Never commit user workbooks or exported summaries.

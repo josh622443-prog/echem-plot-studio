@@ -1,10 +1,10 @@
-ECHEM PLOT STUDIO v1.27.13 - PYTHON NDAX ADD-ON
+ECHEM PLOT STUDIO v1.27.14 - PYTHON NDAX ADD-ON
 ================================================
 
 Start
 -----
 Recommended Windows runtime ZIP (current files only):
-https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.13-Windows.zip
+https://github.com/josh622443-prog/echem-plot-studio/raw/refs/heads/main/downloads/Echem-Plot-Studio-v1.27.14-Windows.zip
 The v1.24.7 GitHub Release and /tree/300da08... snapshots are older than the
 2026-11-02 Windows startup fix. Use the current download or main branch.
 
@@ -13,7 +13,7 @@ https://github.com/josh622443-prog/echem-plot-studio/tree/main
 Use Code > Download ZIP, then extract the entire ZIP before starting.
 Historical Echem_Plot_Studio_v*.html and baseline*.html files are retained in
 the source repository. They are not separate installations. The launcher opens
-the current v1.27.13 automatically; index.html is its identical current entry.
+the current v1.27.14 automatically; index.html is its identical current entry.
 Do not mix launcher/server files from different snapshots.
 
 Double-click "Start Echem Plot Studio.cmd" and use the page it opens at
@@ -82,3 +82,6 @@ needed. Export uses a new hidden Origin process and does not attach to an
 existing project. All parsing and export remain on this computer.
 The NewareNDA dependency and its license remain under .runtime/python;
 see THIRD-PARTY-NOTICES.md. The project's original LICENSE is unchanged.
+
+
+v1.27.14 — Battery summary: Data Library → select files → Compare selected → wait for imports. In Multi-Cell Overlay, open Battery summary / Excel (Quick setup). Fill process metadata and export Battery Summary, Cycle Metrics, and Read Me. All imported files are included regardless of plot filters; failed imports retained, demos excluded. Blank means unknown; filename pressure needs confirmation. First positive discharge is the retention reference; last recorded cycle may be incomplete. Edits persist only for this page session.
